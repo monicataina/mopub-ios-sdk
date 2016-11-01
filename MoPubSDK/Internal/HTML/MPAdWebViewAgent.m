@@ -130,8 +130,8 @@
         self.userInteractedWithWebView = YES;
     }
 
-    [self.view mp_setScrollable:configuration.scrollable];
-    [self.view disableJavaScriptDialogs];
+    [MPAdditions_UIWebView mp_setScrollable:configuration.scrollable forWebView:self.view];
+    [MPAdditions_UIWebView disableJavaScriptDialogsForWebView:self.view];
 
     [self.view loadHTMLString:[configuration adResponseHTMLString]
                       baseURL:[NSURL URLWithString:[MPAPIEndpoints baseURL]]
@@ -202,7 +202,7 @@
     }
 
     NSURL *URL = [request URL];
-    if ([URL mp_isMoPubScheme]) {
+    if ([MPAdditions_NSURL mp_isMoPubSchemeForURL:URL]) {
         [self performActionForMoPubSpecificURL:URL];
         return NO;
     } else if ([self shouldIntercept:URL navigationType:navigationType]) {
@@ -210,20 +210,20 @@
         return NO;
     } else {
         // don't handle any deep links without user interaction
-        return self.userInteractedWithWebView || [URL mp_isSafeForLoadingWithoutUserAction];
+        return self.userInteractedWithWebView || [MPAdditions_NSURL mp_isSafeForLoadingWithoutUserActionForURL:URL];
     }
 }
 
 - (void)webViewDidStartLoad:(UIWebView *)webView
 {
-    [self.view disableJavaScriptDialogs];
+    [MPAdditions_UIWebView disableJavaScriptDialogsForWebView:self.view];
 }
 
 #pragma mark - MoPub-specific URL handlers
 - (void)performActionForMoPubSpecificURL:(NSURL *)URL
 {
     MPLogDebug(@"MPAdWebView - loading MoPub URL: %@", URL);
-    MPMoPubHostCommand command = [URL mp_mopubHostCommand];
+    MPMoPubHostCommand command = [MPAdditions_NSURL mp_mopubHostCommandForURL:URL];
     switch (command) {
         case MPMoPubHostCommandClose:
             [self.delegate adDidClose:self.view];
@@ -243,7 +243,8 @@
 #pragma mark - URL Interception
 - (BOOL)shouldIntercept:(NSURL *)URL navigationType:(UIWebViewNavigationType)navigationType
 {
-    if ([URL mp_hasTelephoneScheme] || [URL mp_hasTelephonePromptScheme]) {
+    MPAdditions_NSURL *MPURL = (MPAdditions_NSURL *)URL;
+    if ([MPAdditions_NSURL mp_hasTelephoneSchemeForURL:URL] || [MPAdditions_NSURL mp_hasTelephonePromptSchemeForURL:URL]) {
         return YES;
     } else if (!(self.configuration.shouldInterceptLinks)) {
         return NO;
@@ -262,7 +263,7 @@
     if (self.configuration.clickTrackingURL) {
         NSString *path = [NSString stringWithFormat:@"%@&r=%@",
                           self.configuration.clickTrackingURL.absoluteString,
-                          [[URL absoluteString] mp_URLEncodedString]];
+                          [MPAdditions_NSString mp_URLEncodedString:[URL absoluteString]]];
         redirectedURL = [NSURL URLWithString:path];
     }
 

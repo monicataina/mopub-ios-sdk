@@ -9,8 +9,9 @@
 
 @class MPVungleRouter;
 
-@interface MPInstanceProvider (Vungle)
+//use a MoPub's class instead of a category so that I can force to initialize it even without -ObjC flag
+@interface MPVungleInstanceProvider : NSObject
 
-- (MPVungleRouter *)sharedMPVungleRouter;
++ (MPVungleRouter *)sharedMPVungleRouterFrom:(MPInstanceProvider *)provider;
 
 @end

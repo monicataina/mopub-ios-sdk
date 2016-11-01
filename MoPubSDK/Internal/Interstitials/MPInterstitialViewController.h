@@ -7,6 +7,7 @@
 
 #import <UIKit/UIKit.h>
 #import "MPGlobal.h"
+#import "UIButton+MPAdditions.h"
 
 @class CLLocation;
 
@@ -18,7 +19,7 @@
 
 @property (nonatomic, assign) MPInterstitialCloseButtonStyle closeButtonStyle;
 @property (nonatomic, assign) MPInterstitialOrientationType orientationType;
-@property (nonatomic, strong) UIButton *closeButton;
+@property (nonatomic, strong) MPAdditions_UIButton *closeButton;
 @property (nonatomic, weak) id<MPInterstitialViewControllerDelegate> delegate;
 
 - (void)presentInterstitialFromViewController:(UIViewController *)controller;

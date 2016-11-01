@@ -5,7 +5,7 @@
 
 #import "UIView+MPAdditions.h"
 
-@implementation UIView (Helper)
+@implementation MPAdditions_UIView
 
 - (CGFloat)mp_x
 {

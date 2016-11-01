@@ -86,7 +86,7 @@
     CFIndex count = CFArrayGetCount(arrayRef);
 
     for (CFIndex i = 0; i < count; ++i) {
-        CFStringRef runLoopMode = CFArrayGetValueAtIndex(arrayRef, i);
+        CFStringRef runLoopMode = (CFStringRef)CFArrayGetValueAtIndex(arrayRef, i);
         if (CFRunLoopContainsTimer(runLoopRef, (__bridge CFRunLoopTimerRef)self.timer, runLoopMode)) {
             CFRelease(arrayRef);
             return YES;

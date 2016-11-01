@@ -7,6 +7,7 @@
 
 #import "MPMoPubRewardedVideoCustomEvent.h"
 #import "MPMRAIDInterstitialViewController.h"
+#import "MPInterstitialViewController.h"
 #import "MPInstanceProvider.h"
 #import "MPLogging.h"
 #import "MPRewardedVideoReward.h"

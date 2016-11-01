@@ -2,17 +2,17 @@
 //  MPInstanceProvider+Unity.m
 //  MoPubSDK
 //
-//  Copyright (c) 2015 MoPub. All rights reserved.
+//  Copyright (c) 2016 MoPub. All rights reserved.
 //
 
 #import "MPInstanceProvider+Unity.h"
 #import "MPUnityRouter.h"
 
-@implementation MPInstanceProvider (Unity)
+@implementation MPUnityInstanceProvider
 
-- (MPUnityRouter *)sharedMPUnityRouter
++ (MPUnityRouter *)sharedMPUnityRouterFrom:(MPInstanceProvider *)provider
 {
-    return [self singletonForClass:[MPUnityRouter class]
+    return [provider singletonForClass:[MPUnityRouter class]
                           provider:^id{
                               return [[MPUnityRouter alloc] init];
                           }];

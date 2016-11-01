@@ -2,15 +2,16 @@
 //  MPInstanceProvider+Unity.h
 //  MoPubSDK
 //
-//  Copyright (c) 2015 MoPub. All rights reserved.
+//  Copyright (c) 2016 MoPub. All rights reserved.
 //
 
 #import "MPInstanceProvider.h"
 
 @class MPUnityRouter;
 
-@interface MPInstanceProvider (Unity)
+//use a MoPub's class instead of a category so that I can force to initialize it even without -ObjC flag
+@interface MPUnityInstanceProvider : NSObject
 
-- (MPUnityRouter *)sharedMPUnityRouter;
++ (MPUnityRouter *)sharedMPUnityRouterFrom:(MPInstanceProvider *)provider;
 
 @end

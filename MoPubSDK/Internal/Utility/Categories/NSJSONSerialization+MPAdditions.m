@@ -7,19 +7,7 @@
 
 #import "NSJSONSerialization+MPAdditions.h"
 
-@interface NSMutableDictionary (RemoveNullObjects)
-
-- (void)mp_removeNullsRecursively;
-
-@end
-
-@interface NSMutableArray (RemoveNullObjects)
-
-- (void)mp_removeNullsRecursively;
-
-@end
-
-@implementation NSJSONSerialization (MPAdditions)
+@implementation MPAdditions_NSJSONSerialization
 
 + (id)mp_JSONObjectWithData:(NSData *)data options:(NSJSONReadingOptions)opt clearNullObjects:(BOOL)clearNulls error:(NSError **)error
 {
@@ -32,60 +20,66 @@
     if (error || !clearNulls) {
         return JSONObject;
     }
-
-    [JSONObject mp_removeNullsRecursively];
-
+    
+    if([JSONObject isKindOfClass:[NSMutableArray class]])
+    {
+        [self removeNullObjectsFromArray:JSONObject];
+    }
+    else if([JSONObject isKindOfClass:[NSMutableDictionary class]])
+    {
+        [self removeNullObjectsFromDictionary:JSONObject];
+    }
     return JSONObject;
 }
++(void)load
+{
+    
+}
 
-@end
-
-@implementation NSMutableDictionary (RemovingNulls)
-
--(void)mp_removeNullsRecursively
++ (void)removeNullObjectsFromDictionary:(NSMutableDictionary *)dictionary
 {
     // First, filter out directly stored nulls
     NSMutableArray *nullKeys = [NSMutableArray array];
     NSMutableArray *arrayKeys = [NSMutableArray array];
     NSMutableArray *dictionaryKeys = [NSMutableArray array];
-
-    [self enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
-         if ([obj isEqual:[NSNull null]]) {
-             [nullKeys addObject:key];
-         } else if ([obj isKindOfClass:[NSDictionary  class]]) {
-             [dictionaryKeys addObject:key];
-         } else if ([obj isKindOfClass:[NSArray class]]) {
-             [arrayKeys addObject:key];
-         }
-     }];
-
+    
+    [dictionary enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
+        if ([obj isEqual:[NSNull null]]) {
+            [nullKeys addObject:key];
+        } else if ([obj isKindOfClass:[NSDictionary  class]]) {
+            [dictionaryKeys addObject:key];
+        } else if ([obj isKindOfClass:[NSArray class]]) {
+            [arrayKeys addObject:key];
+        }
+    }];
+    
     // Remove all the nulls
-    [self removeObjectsForKeys:nullKeys];
-
+    [dictionary removeObjectsForKeys:nullKeys];
+    
     // Cascade down the dictionaries
     for (id dictionaryKey in dictionaryKeys) {
-        NSMutableDictionary *dictionary = [self objectForKey:dictionaryKey];
-        [dictionary mp_removeNullsRecursively];
+        [self removeNullObjectsFromDictionary:[dictionary objectForKey:dictionaryKey]];
     }
-
+    
     // Recursively remove nulls from arrays
     for (id arrayKey in arrayKeys) {
-        NSMutableArray *array = [self objectForKey:arrayKey];
-        [array mp_removeNullsRecursively];
+        [self removeNullObjectsFromArray:[dictionary objectForKey:arrayKey]];
     }
+
 }
 
-@end
-
-@implementation NSMutableArray (RemovingNulls)
-
--(void)mp_removeNullsRecursively
++ (void)removeNullObjectsFromArray:(NSMutableArray *)array
 {
-    [self removeObjectIdenticalTo:[NSNull null]];
-
-    for (id object in self) {
-        if ([object respondsToSelector:@selector(mp_removeNullsRecursively)]) {
-            [(NSMutableDictionary *)object mp_removeNullsRecursively];
+    [array removeObjectIdenticalTo:[NSNull null]];
+    
+    for (id object in array) {
+        if([object isKindOfClass:[NSMutableArray class]])
+        {
+           [self removeNullObjectsFromArray:object];
+        }
+        else if([object isKindOfClass:[NSMutableDictionary class]])
+        {
+            [self removeNullObjectsFromDictionary:object];
         }
     }
 }

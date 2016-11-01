@@ -21,17 +21,17 @@ typedef enum {
     MPMoPubShareHostCommandUnrecognized
 } MPMoPubShareHostCommand;
 
-@interface NSURL (MPAdditions)
+@interface MPAdditions_NSURL : NSObject
 
-- (NSString *)mp_queryParameterForKey:(NSString *)key;
-- (NSArray *)mp_queryParametersForKey:(NSString *)key;
-- (NSDictionary *)mp_queryAsDictionary;
-- (BOOL)mp_hasTelephoneScheme;
-- (BOOL)mp_hasTelephonePromptScheme;
-- (BOOL)mp_isSafeForLoadingWithoutUserAction;
-- (BOOL)mp_isMoPubScheme;
-- (MPMoPubHostCommand)mp_mopubHostCommand;
-- (BOOL)mp_isMoPubShareScheme;
-- (MPMoPubShareHostCommand)mp_MoPubShareHostCommand;
++ (NSString *)mp_queryParameterForKey:(NSString *)key forURL:(NSURL *)url;
++ (NSArray *)mp_queryParametersForKey:(NSString *)key forURL:(NSURL *)url;
++ (NSDictionary *)mp_queryAsDictionaryForURL:(NSURL *)url;
++ (BOOL)mp_hasTelephoneSchemeForURL:(NSURL *)url;
++ (BOOL)mp_hasTelephonePromptSchemeForURL:(NSURL *)url;
++ (BOOL)mp_isSafeForLoadingWithoutUserActionForURL:(NSURL *)url;
++ (BOOL)mp_isMoPubSchemeForURL:(NSURL *)url;
++ (MPMoPubHostCommand)mp_mopubHostCommandForURL:(NSURL *)url;
++ (BOOL)mp_isMoPubShareSchemeForURL:(NSURL *)url;
++ (MPMoPubShareHostCommand)mp_MoPubShareHostCommandForURL:(NSURL *)url;
 
 @end

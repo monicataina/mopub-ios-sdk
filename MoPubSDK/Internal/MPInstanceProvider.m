@@ -25,6 +25,7 @@
 #import "MRBridge.h"
 #import "MRController.h"
 #import "MPClosableView.h"
+#import "MPRewardedVideo.h"
 #import "MPRewardedVideoAdManager.h"
 #import "MPRewardedVideoAdapter.h"
 #import "MPRewardedVideoCustomEvent.h"
@@ -181,9 +182,9 @@ static MPInstanceProvider *sharedAdProvider = nil;
 
 #pragma mark - Rewarded Video
 
-- (MPRewardedVideoAdManager *)buildRewardedVideoAdManagerWithAdUnitID:(NSString *)adUnitID delegate:(id<MPRewardedVideoAdManagerDelegate>)delegate
+- (MPRewardedVideoAdManager *)buildRewardedVideoAdManagerWithAdUnitID:(NSString *)adUnitID delegate:(id<MPRewardedVideoAdManagerDelegate>)delegate rewardDelegate:(id<MPRewardedVideoDelegate>)rewardDelegate
 {
-    return [[MPRewardedVideoAdManager alloc] initWithAdUnitID:adUnitID delegate:delegate];
+    return [[MPRewardedVideoAdManager alloc] initWithAdUnitID:adUnitID delegate:delegate rewardDelegate:rewardDelegate];
 }
 
 - (MPRewardedVideoAdapter *)buildRewardedVideoAdapterWithDelegate:(id<MPRewardedVideoAdapterDelegate>)delegate

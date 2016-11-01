@@ -35,6 +35,12 @@
 - (void)getAdWithConfiguration:(MPAdConfiguration *)configuration;
 
 /**
+ * Called to retrieve the current customEvent class
+ *
+ */
+- (MPRewardedVideoCustomEvent*)getCustomEvent;
+
+/**
  * Tells the caller whether the underlying ad network currently has an ad available for presentation.
  */
 - (BOOL)hasAdAvailable;

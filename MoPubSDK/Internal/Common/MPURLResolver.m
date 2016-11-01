@@ -121,7 +121,7 @@ static NSString * const kResolverErrorDomain = @"com.mopub.resolver";
         }
     } else if ([self safariURLForURL:URL]) {
         actionInfo = [MPURLActionInfo infoWithURL:self.originalURL safariDestinationURL:[NSURL URLWithString:[self safariURLForURL:URL]]];
-    } else if ([URL mp_isMoPubShareScheme]) {
+    } else if ([MPAdditions_NSURL mp_isMoPubShareSchemeForURL:URL]) {
         actionInfo = [MPURLActionInfo infoWithURL:self.originalURL shareURL:URL];
     } else if ([self URLShouldOpenInApplication:URL]) {
         actionInfo = [MPURLActionInfo infoWithURL:self.originalURL deeplinkURL:URL];
@@ -162,10 +162,10 @@ static NSString * const kResolverErrorDomain = @"com.mopub.resolver";
         if ([lastPathComponent hasPrefix:@"id"]) {
             itemIdentifier = [lastPathComponent substringFromIndex:2];
         } else {
-            itemIdentifier = [URL.mp_queryAsDictionary objectForKey:@"id"];
+            itemIdentifier = [[MPAdditions_NSURL mp_queryAsDictionaryForURL:URL] objectForKey:@"id"];
         }
     } else if ([URL.host hasSuffix:@"phobos.apple.com"]) {
-        itemIdentifier = [URL.mp_queryAsDictionary objectForKey:@"id"];
+        itemIdentifier = [[MPAdditions_NSURL mp_queryAsDictionaryForURL:URL] objectForKey:@"id"];
     }
 
     NSCharacterSet *nonIntegers = [[NSCharacterSet decimalDigitCharacterSet] invertedSet];
@@ -184,7 +184,7 @@ static NSString * const kResolverErrorDomain = @"com.mopub.resolver";
 
     if ([[URL scheme] isEqualToString:kMoPubSafariScheme] &&
         [[URL host] isEqualToString:kMoPubSafariNavigateHost]) {
-        safariURL = [URL.mp_queryAsDictionary objectForKey:@"url"];
+        safariURL = [[MPAdditions_NSURL mp_queryAsDictionaryForURL:URL] objectForKey:@"url"];
     }
 
     return safariURL;
@@ -208,7 +208,7 @@ static NSString * const kResolverErrorDomain = @"com.mopub.resolver";
         NSString *charset = [contentType substringWithRange:[charsetResult range]];
 
         // ensure that charset is not deallocated early
-        CFStringRef cfCharset = CFBridgingRetain(charset);
+        CFStringRef cfCharset = (CFStringRef)CFBridgingRetain(charset);
         CFStringEncoding cfEncoding = CFStringConvertIANACharSetNameToEncoding(cfCharset);
         CFBridgingRelease(cfCharset);
 
@@ -251,7 +251,7 @@ static NSString * const kResolverErrorDomain = @"com.mopub.resolver";
 
     NSDictionary *headers = [httpResponse allHeaderFields];
     NSString *contentType = [headers objectForKey:kMoPubHTTPHeaderContentType];
-    self.responseEncoding = [httpResponse stringEncodingFromContentType:contentType];
+    self.responseEncoding = [MPAdditions_NSHTTPURLResponse stringEncodingFromContentType:contentType];
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection

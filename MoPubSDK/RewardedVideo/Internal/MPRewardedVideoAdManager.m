@@ -12,6 +12,7 @@
 #import "MPRewardedVideoAdapter.h"
 #import "MPInstanceProvider.h"
 #import "MPCoreInstanceProvider.h"
+#import "MPRewardedVideo.h"
 #import "MPRewardedVideoError.h"
 #import "MPLogging.h"
 #import "MoPub.h"
@@ -29,12 +30,13 @@
 
 @implementation MPRewardedVideoAdManager
 
-- (instancetype)initWithAdUnitID:(NSString *)adUnitID delegate:(id<MPRewardedVideoAdManagerDelegate>)delegate
+- (instancetype)initWithAdUnitID:(NSString *)adUnitID delegate:(id<MPRewardedVideoAdManagerDelegate>)delegate rewardDelegate:(id<MPRewardedVideoDelegate>)rewardDelegate
 {
     if (self = [super init]) {
         _adUnitID = [adUnitID copy];
         _communicator = [[MPCoreInstanceProvider sharedProvider] buildMPAdServerCommunicatorWithDelegate:self];
         _delegate = delegate;
+        _rewardDelegate = rewardDelegate;
     }
 
     return self;
@@ -48,6 +50,22 @@
 - (Class)customEventClass
 {
     return self.configuration.customEventClass;
+}
+
+- (int)getCustomEventIdentifier;
+{
+    int customClassID = -1;
+    
+    if(!self.adapter)
+        return -1;
+    
+    MPRewardedVideoCustomEvent* customEvent = [self.adapter getCustomEvent];
+    
+    if(customEvent && [[customEvent class] respondsToSelector:@selector(getCustomEventIdentifier)])
+    {
+        customClassID = [[customEvent class] getCustomEventIdentifier];
+    }
+    return customClassID;
 }
 
 - (BOOL)hasAdAvailable
@@ -170,8 +188,11 @@
             return settings;
         }
     }
-
-    return nil;
+    
+    //if mediationSettings is nil or it doesn't contain aClass, then check the global settings:
+    id<MPMediationSettingsProtocol> globalSettings = [[MoPub sharedInstance] globalMediationSettingsForClass:aClass];
+    
+    return globalSettings;
 }
 
 - (void)rewardedVideoDidLoadForAdapter:(MPRewardedVideoAdapter *)adapter

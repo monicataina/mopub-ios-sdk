@@ -5,7 +5,10 @@
 //  Copyright (c) 2015 MoPub. All rights reserved.
 //
 
+#if MP_HAS_NATIVE_PACKAGE
 #import "MOPUBNativeVideoImpressionAgent.h"
+#endif
+
 #import "MPAnalyticsTracker.h"
 #import "MPCoreInstanceProvider.h"
 #import "MPLogging.h"
@@ -95,7 +98,9 @@ static const NSInteger kStartTrackerTime = 1;
 @property (nonatomic) VASTEventTracker *expandTracker;
 @property (nonatomic) VASTEventTracker *collapseTracker;
 
+#if MP_HAS_NATIVE_PACKAGE
 @property (nonatomic) MOPUBNativeVideoImpressionAgent *customViewabilityTrackingAgent;
+#endif
 
 @end
 
@@ -135,7 +140,9 @@ static const NSInteger kStartTrackerTime = 1;
 
         if (_videoConfig.viewabilityTrackingURL) {
             _customViewabilityTracker = [VASTEventTracker eventTrackerWithURLs:[NSArray arrayWithObject:_videoConfig.viewabilityTrackingURL]];
+            #if MP_HAS_NATIVE_PACKAGE
             _customViewabilityTrackingAgent = [[MOPUBNativeVideoImpressionAgent alloc] initWithVideoView:videoView requiredVisibilityPercentage:videoConfig.minimumFractionOfVideoVisible requiredPlaybackDuration:videoConfig.minimumViewabilityTimeInterval];
+            #endif
         }
     }
     return self;
@@ -227,8 +234,11 @@ static const NSInteger kStartTrackerTime = 1;
         }
     }
 
-    if (self.customViewabilityTracker && !self.customViewabilityTracker.trackersFired &&
-        [self.customViewabilityTrackingAgent shouldTrackImpressionWithCurrentPlaybackTime:timeOffset]) {
+    if (self.customViewabilityTracker && !self.customViewabilityTracker.trackersFired
+#if MP_HAS_NATIVE_PACKAGE
+        && [self.customViewabilityTrackingAgent shouldTrackImpressionWithCurrentPlaybackTime:timeOffset]
+#endif
+        ) {
         [self cleanAndSendTrackingEvents:self.customViewabilityTracker timeOffset:timeOffset];
     }
 }
@@ -247,7 +257,9 @@ static const NSInteger kStartTrackerTime = 1;
 
 - (void)handleNewVideoView:(UIView *)videoView
 {
+#if MP_HAS_NATIVE_PACKAGE
     self.customViewabilityTrackingAgent = [[MOPUBNativeVideoImpressionAgent alloc] initWithVideoView:videoView requiredVisibilityPercentage:self.videoConfig.minimumFractionOfVideoVisible requiredPlaybackDuration:self.videoConfig.minimumViewabilityTimeInterval];
+#endif
 }
 
 @end

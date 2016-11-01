@@ -93,10 +93,10 @@ static NSString * const kCloseButtonXImageName = @"MPCloseButtonX.png";
 
 #pragma mark - Close Button
 
-- (UIButton *)closeButton
+- (MPAdditions_UIButton *)closeButton
 {
     if (!_closeButton) {
-        _closeButton = [UIButton buttonWithType:UIButtonTypeCustom];
+        _closeButton = [MPAdditions_UIButton buttonWithType:UIButtonTypeCustom];
         _closeButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin |
         UIViewAutoresizingFlexibleBottomMargin;
 
@@ -179,7 +179,7 @@ static NSString * const kCloseButtonXImageName = @"MPCloseButtonX.png";
 
 - (void)setApplicationStatusBarHidden:(BOOL)hidden
 {
-    [[UIApplication sharedApplication] mp_preIOS7setApplicationStatusBarHidden:hidden];
+    [MPAdditions_UIApplication mp_preIOS7setApplicationStatusBarHidden:hidden];
 }
 
 #pragma mark - Hidding status bar (iOS 7 and above)

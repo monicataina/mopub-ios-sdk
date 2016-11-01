@@ -5,7 +5,7 @@
 
 #import <UIKit/UIKit.h>
 
-@interface UIColor (MPAdditions)
+@interface MPAdditions_UIColor : NSObject
 
 + (UIColor *)mp_colorFromHexString:(NSString *)hexString alpha:(CGFloat)alpha;
 

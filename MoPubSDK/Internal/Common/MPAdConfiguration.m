@@ -257,7 +257,7 @@ NSString * const kRewardedVideoCompletionUrlHeaderKey = @"X-Rewarded-Video-Compl
     NSData *data = [(NSString *)[headers objectForKey:key] dataUsingEncoding:NSUTF8StringEncoding];
     NSDictionary *JSONFromHeaders = nil;
     if (data) {
-        JSONFromHeaders = [NSJSONSerialization mp_JSONObjectWithData:data options:NSJSONReadingMutableContainers clearNullObjects:YES error:nil];
+        JSONFromHeaders = [MPAdditions_NSJSONSerialization mp_JSONObjectWithData:data options:NSJSONReadingMutableContainers clearNullObjects:YES error:nil];
     }
     return JSONFromHeaders;
 }

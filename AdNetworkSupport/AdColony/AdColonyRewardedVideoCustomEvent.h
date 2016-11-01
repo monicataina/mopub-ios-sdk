@@ -17,4 +17,7 @@
  */
 @interface AdColonyRewardedVideoCustomEvent : MPRewardedVideoCustomEvent
 
+//add this setting to identify which provider triggers a callback
++(void)setCustomEventIdentifier:(int)identifier;
+
 @end

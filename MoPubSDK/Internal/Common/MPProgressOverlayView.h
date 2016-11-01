@@ -7,6 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "UIButton+MPAdditions.h"
 
 @protocol MPProgressOverlayViewDelegate;
 
@@ -15,7 +16,7 @@
     UIView *_outerContainer;
     UIView *_innerContainer;
     UIActivityIndicatorView *_activityIndicator;
-    UIButton *_closeButton;
+    MPAdditions_UIButton *_closeButton;
     CGPoint _closeButtonPortraitCenter;
 }
 

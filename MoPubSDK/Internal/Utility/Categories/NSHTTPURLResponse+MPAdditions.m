@@ -10,9 +10,9 @@
 
 NSString * const kMoPubHTTPHeaderContentType = @"Content-Type";
 
-@implementation NSHTTPURLResponse (MPAdditions)
+@implementation MPAdditions_NSHTTPURLResponse
 
-- (NSStringEncoding)stringEncodingFromContentType:(NSString *)contentType
++ (NSStringEncoding)stringEncodingFromContentType:(NSString *)contentType
 {
     NSStringEncoding encoding = NSUTF8StringEncoding;
 
@@ -28,7 +28,7 @@ NSString * const kMoPubHTTPHeaderContentType = @"Content-Type";
         NSString *charset = [contentType substringWithRange:[charsetResult range]];
 
         // ensure that charset is not deallocated early
-        CFStringRef cfCharset = CFBridgingRetain(charset);
+        CFStringRef cfCharset = (CFStringRef)CFBridgingRetain(charset);
         CFStringEncoding cfEncoding = CFStringConvertIANACharSetNameToEncoding(cfCharset);
         CFBridgingRelease(cfCharset);
 

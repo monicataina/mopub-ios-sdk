@@ -209,55 +209,55 @@ NSString * const MPLogEventCategoryAdInteractions = @"ad_interactions";
 {
     NSMutableDictionary *d = [[NSMutableDictionary alloc] init];
 
-    [d mp_safeSetObject:[self eventCategoryAsString] forKey:@"_category_"];
-    [d mp_safeSetObject:[self eventName] forKey:@"name"];
-    [d mp_safeSetObject:[self eventCategory] forKey:@"name_category"];
+    [MPInternalUtils mp_safeSetObject:[self eventCategoryAsString] forKey:@"_category_" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:[self eventName] forKey:@"name" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:[self eventCategory] forKey:@"name_category" forDictionary:d];
 
-    [d mp_safeSetObject:@([self sdkProduct]) forKey:@"sdk_product"];
-    [d mp_safeSetObject:[self sdkVersion] forKey:@"sdk_version"];
+    [MPInternalUtils mp_safeSetObject:@([self sdkProduct]) forKey:@"sdk_product" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:[self sdkVersion] forKey:@"sdk_version" forDictionary:d];
 
-    [d mp_safeSetObject:[self adUnitId] forKey:@"ad_unit_id"];
-    [d mp_safeSetObject:[self adCreativeId] forKey:@"ad_creative_id"];
-    [d mp_safeSetObject:[self dspCreativeId] forKey:@"dsp_creative_id"];
-    [d mp_safeSetObject:[self adType] forKey:@"ad_type"];
-    [d mp_safeSetObject:[self adNetworkType] forKey:@"ad_network_type"];
-    [d mp_safeSetObject:@(self.adSize.width) forKey:@"ad_width_px"];
-    [d mp_safeSetObject:@(self.adSize.height) forKey:@"ad_height_px"];
+    [MPInternalUtils mp_safeSetObject:[self adUnitId] forKey:@"ad_unit_id" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:[self adCreativeId] forKey:@"ad_creative_id" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:[self dspCreativeId] forKey:@"dsp_creative_id" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:[self adType] forKey:@"ad_type" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:[self adNetworkType] forKey:@"ad_network_type" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:@(self.adSize.width) forKey:@"ad_width_px" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:@(self.adSize.height) forKey:@"ad_height_px" forDictionary:d];
 
-    [d mp_safeSetObject:@([self appPlatform]) forKey:@"app_platform"];
-    [d mp_safeSetObject:[self appName] forKey:@"app_name"];
-    [d mp_safeSetObject:[self appStoreId] forKey:@"app_appstore_id"];
-    [d mp_safeSetObject:[self appBundleId] forKey:@"app_bundle_id"];
-    [d mp_safeSetObject:[self appVersion] forKey:@"app_version"];
+    [MPInternalUtils mp_safeSetObject:@([self appPlatform]) forKey:@"app_platform" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:[self appName] forKey:@"app_name" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:[self appStoreId] forKey:@"app_appstore_id" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:[self appBundleId] forKey:@"app_bundle_id" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:[self appVersion] forKey:@"app_version" forDictionary:d];
 
-    [d mp_safeSetObject:[self clientAdvertisingId] forKey:@"client_advertising_id"];
-    [d mp_safeSetObject:@([self clientDoNotTrack]) forKey:@"client_do_not_track"];
+    [MPInternalUtils mp_safeSetObject:[self clientAdvertisingId] forKey:@"client_advertising_id" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:@([self clientDoNotTrack]) forKey:@"client_do_not_track" forDictionary:d];
 
-    [d mp_safeSetObject:[self deviceManufacturer] forKey:@"device_manufacturer"];
-    [d mp_safeSetObject:[self deviceModel] forKey:@"device_model"];
-    [d mp_safeSetObject:[self deviceModel] forKey:@"device_product"];
-    [d mp_safeSetObject:[self deviceOSVersion] forKey:@"device_os_version"];
-    [d mp_safeSetObject:@(self.deviceSize.width) forKey:@"device_screen_width_px"];
-    [d mp_safeSetObject:@(self.deviceSize.height) forKey:@"device_screen_height_px"];
+    [MPInternalUtils mp_safeSetObject:[self deviceManufacturer] forKey:@"device_manufacturer" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:[self deviceModel] forKey:@"device_model" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:[self deviceModel] forKey:@"device_product" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:[self deviceOSVersion] forKey:@"device_os_version" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:@(self.deviceSize.width) forKey:@"device_screen_width_px" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:@(self.deviceSize.height) forKey:@"device_screen_height_px" forDictionary:d];
 
-    [d mp_safeSetObject:@([self geoLat]) forKey:@"geo_lat"];
-    [d mp_safeSetObject:@([self geoLon]) forKey:@"geo_lon"];
-    [d mp_safeSetObject:@([self geoAccuracy]) forKey:@"geo_accuracy_radius_meters"];
+    [MPInternalUtils mp_safeSetObject:@([self geoLat]) forKey:@"geo_lat" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:@([self geoLon]) forKey:@"geo_lon" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:@([self geoAccuracy]) forKey:@"geo_accuracy_radius_meters" forDictionary:d];
 
-    [d mp_safeSetObject:@([self performanceDurationMs]) forKey:@"perf_duration_ms"];
+    [MPInternalUtils mp_safeSetObject:@([self performanceDurationMs]) forKey:@"perf_duration_ms" forDictionary:d];
 
-    [d mp_safeSetObject:@([self networkType]) forKey:@"network_type"];
-    [d mp_safeSetObject:[self networkOperatorCode] forKey:@"network_operator_code"];
-    [d mp_safeSetObject:[self networkOperatorName] forKey:@"network_operator_name"];
-    [d mp_safeSetObject:[self networkISOCountryCode] forKey:@"network_iso_country_code"];
-    [d mp_safeSetObject:[self networkSimISOCountryCode] forKey:@"network_sim_iso_country_code"];
+    [MPInternalUtils mp_safeSetObject:@([self networkType]) forKey:@"network_type" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:[self networkOperatorCode] forKey:@"network_operator_code" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:[self networkOperatorName] forKey:@"network_operator_name" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:[self networkISOCountryCode] forKey:@"network_iso_country_code" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:[self networkSimISOCountryCode] forKey:@"network_sim_iso_country_code" forDictionary:d];
 
-    [d mp_safeSetObject:[self requestId] forKey:@"req_id"];
-    [d mp_safeSetObject:@([self requestStatusCode]) forKey:@"req_status_code"];
-    [d mp_safeSetObject:[self requestURI] forKey:@"req_uri"];
-    [d mp_safeSetObject:@([self requestRetries]) forKey:@"req_retries"];
+    [MPInternalUtils mp_safeSetObject:[self requestId] forKey:@"req_id" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:@([self requestStatusCode]) forKey:@"req_status_code" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:[self requestURI] forKey:@"req_uri" forDictionary:d];
+    [MPInternalUtils mp_safeSetObject:@([self requestRetries]) forKey:@"req_retries" forDictionary:d];
 
-    [d mp_safeSetObject:@([self timestampAsEpoch]) forKey:@"timestamp_client"];
+    [MPInternalUtils mp_safeSetObject:@([self timestampAsEpoch]) forKey:@"timestamp_client" forDictionary:d];
 
     return d;
 }

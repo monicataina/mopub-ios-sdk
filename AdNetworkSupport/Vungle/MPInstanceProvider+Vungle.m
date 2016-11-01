@@ -8,11 +8,11 @@
 #import "MPInstanceProvider+Vungle.h"
 #import "MPVungleRouter.h"
 
-@implementation MPInstanceProvider (Vungle)
+@implementation MPVungleInstanceProvider
 
-- (MPVungleRouter *)sharedMPVungleRouter
++ (MPVungleRouter *)sharedMPVungleRouterFrom:(MPInstanceProvider *)provider
 {
-    return [self singletonForClass:[MPVungleRouter class]
+    return [provider singletonForClass:[MPVungleRouter class]
                           provider:^id{
                               return [[MPVungleRouter alloc] init];
                           }];

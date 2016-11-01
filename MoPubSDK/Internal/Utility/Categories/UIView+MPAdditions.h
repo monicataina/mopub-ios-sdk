@@ -5,7 +5,7 @@
 
 #import <UIKit/UIKit.h>
 
-@interface UIView (MPAdditions)
+@interface MPAdditions_UIView : UIView
 
 @property (nonatomic) CGFloat mp_x;
 @property (nonatomic) CGFloat mp_y;

@@ -21,8 +21,9 @@ static NSArray *gAllZoneIds = nil;
 
 #define AdColonyZoneIds() [NSArray arrayWithObjects:@"YOUR_ADCOLONY_ZONEID1", @"YOUR_ADCOLONY_ZONEID2", nil]
 
-@interface AdColonyInterstitialCustomEvent () <AdColonyAdDelegate, MPAdColonyRouterDelegate>
+@interface AdColonyInterstitialCustomEvent () <MPAdColonyRouterDelegate>
 
+@property (nonatomic, copy) NSString *appId;
 @property (nonatomic, copy) NSString *zoneId;
 @property (nonatomic, assign) BOOL zoneAvailable;
 
@@ -54,14 +55,14 @@ static NSArray *gAllZoneIds = nil;
 
 - (void)requestInterstitialWithCustomEventInfo:(NSDictionary *)info
 {
-    NSString *appId = [info objectForKey:@"appId"];
-    if(appId == nil)
+    self.appId = [info objectForKey:@"appId"];
+    if(self.appId == nil)
     {
-        appId = gAppId;
+        self.appId = gAppId;
 
-        if ([appId length] == 0) {
+        if ([self.appId length] == 0) {
             MPLogWarn(@"Setting kAdColonyAppId in AdColonyInterstitialCustomEvent.m is deprecated. Use the appId parameter when configuring your network in the MoPub website.");
-            appId = kAdColonyAppId;
+            self.appId = kAdColonyAppId;
         }
     }
 
@@ -76,45 +77,56 @@ static NSArray *gAllZoneIds = nil;
         }
     }
 
-    [AdColonyCustomEvent initializeAdColonyCustomEventWithAppId:appId allZoneIds:allZoneIds customerId:nil];
-
+    if(self.appId != nil)
+    {
+        [[MPAdColonyRouter sharedRouter] addGlobalCustomEvent:self];
+    }
+    
     NSString *zoneId = [info objectForKey:@"zoneId"];
     if(zoneId == nil)
     {
         zoneId = gDefaultZoneId;
-
+        
         if ([zoneId length] == 0) {
             MPLogWarn(@"Setting kAdColonyDefaultZoneId in AdColonyInterstitialCustomEvent.m is deprecated. Use the zondId parameter when configuring your network in the MoPub website.");
             zoneId = kAdColonyDefaultZoneId;
         }
     }
+    
+    BOOL configureIsCalled = [AdColonyCustomEvent initializeAdColonyCustomEventWithAppId:self.appId allZoneIds:allZoneIds customerId:nil forZoneId:zoneId];
 
     self.zoneId = zoneId;
     self.zoneAvailable = NO;
 
-    if(self.zoneId != nil && appId != nil)
-    {
-        [[MPAdColonyRouter sharedRouter] setCustomEvent:self forZoneId:self.zoneId];
-    }
-
-    if([AdColony zoneStatusForZone:self.zoneId] == ADCOLONY_ZONE_STATUS_ACTIVE)
-    {
-        MPLogInfo(@"AdColony zone %@ available", self.zoneId);
-        [self zoneDidLoad];
-    }
-
     // let AdColony inform us when the zone becomes available
+    
+    //load ad only if this time configure SDK wasn't called, 
+    //otherwise wait for configure to finish, then try to load the ad
+    if(!configureIsCalled)
+    {
+        [self requestRewardedVideoWithCurrentZoneId];
+    }
 }
+- (void)requestRewardedVideoWithCurrentZoneId
+{
+    if(self.zoneId != nil && self.appId != nil) {
+        [[MPAdColonyRouter sharedRouter] setCustomEvent:self forZoneId:self.zoneId];
+        if(![MPAdColonyRouter sharedRouter].isWaitingForInit)
+        {
+            [[MPAdColonyRouter sharedRouter] requestVideoAdWithZoneId:self.zoneId showPrePopup:NO showPostPopup:NO];
+        }
+    }
+}
+
 - (void)showInterstitialFromRootViewController:(UIViewController *)rootViewController
 {
-    if ([AdColony zoneStatusForZone:self.zoneId] == ADCOLONY_ZONE_STATUS_ACTIVE)
-    {
+    if ([[MPAdColonyRouter sharedRouter] hasAdAvailableForZone:self.zoneId]) {
         MPLogInfo(@"AdColony zone %@ attempting to start", self.zoneId);
-        [AdColony playVideoAdForZone:self.zoneId withDelegate:self];
+        
+        [[MPAdColonyRouter sharedRouter] showAdForZone:self.zoneId withViewController:rootViewController];
+        
         [self.delegate interstitialCustomEventWillAppear:self];
-    }
-    else
-    {
+    } else {
         MPLogInfo(@"Failed to show AdColony video interstitial: AdColony now claims zone %@ is not available", self.zoneId);
         [self.delegate interstitialCustomEvent:self didFailToLoadAdWithError:nil];
     }
@@ -126,6 +138,12 @@ static NSArray *gAllZoneIds = nil;
 }
 
 #pragma mark - MPAdColonyRouterDelegate
+
+- (void)configured
+{
+    //the SDK configure was successfully done, so now the ad can be loaded
+    [self requestRewardedVideoWithCurrentZoneId];
+}
 
 - (void)zoneDidLoad
 {
@@ -139,15 +157,18 @@ static NSArray *gAllZoneIds = nil;
     [self.delegate interstitialCustomEventDidExpire:self];
 }
 
-#pragma mark - AdColonyAdDelegate
+- (void)zoneDidFailToLoad:(NSError *)error
+{
+    [self.delegate interstitialCustomEvent:self didFailToLoadAdWithError:error];
+}
 
-- (void)onAdColonyAdStartedInZone:(NSString *)zoneID
+- (void)onAdStartedInZone:(NSString *)zoneID
 {
     MPLogInfo(@"AdColony zone %@ started", zoneID);
     [self.delegate interstitialCustomEventDidAppear:self];
 }
 
-- (void)onAdColonyAdAttemptFinished:(BOOL)shown inZone:(NSString *)zoneID
+- (void)onAttemptFinished:(BOOL)shown inZone:(NSString *)zoneID
 {
     MPLogInfo(@"AdColony zone %@ finished", zoneID);
     [self.delegate interstitialCustomEventWillDisappear:self];

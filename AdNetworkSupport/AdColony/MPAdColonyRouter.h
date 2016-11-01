@@ -16,9 +16,17 @@
  * Maps all Ad Colony zone IDs for both interstitials and rewarded video to their
  * corresponding custom event objects.
  */
-@interface MPAdColonyRouter : NSObject <AdColonyDelegate>
+@interface MPAdColonyRouter : NSObject
+
+@property (nonatomic, assign) BOOL isWaitingForInit;
 
 + (MPAdColonyRouter *)sharedRouter;
+
+- (void) requestVideoAdWithZoneId:(NSString*)zoneId showPrePopup:(BOOL)showPrePopup showPostPopup:(BOOL)showPostPopup;
+
+- (BOOL) hasAdAvailableForZone:(NSString*)zoneId;
+
+- (void) showAdForZone:(NSString*)zoneId withViewController:(UIViewController *)viewController;
 
 /*
  * Associates a custom event with a zone ID.
@@ -41,6 +49,34 @@
  * @param zoneId The zone ID associated with the Ad Colony ad we're working on.
  */
 - (void)removeCustomEvent:(id<MPAdColonyRouterDelegate>)customEvent forZoneId:(NSString *)zoneId;
+
+/*
+ * Adds a custom event for global events like onConfigured
+ *
+ * By calling this method, all Ad Colony events associated will be routed
+ * to customEvent via the `MPAdColonyRouterDelegate` static methods.
+ *
+ * @param customEvent The custom event object .
+ */
+- (void)addGlobalCustomEvent:(id<MPAdColonyRouterDelegate>)customEvent;
+
+/*
+ * Removes a custom event.
+ *
+ * By calling this method, the router will stop sending methods to the specified custom event
+ *
+ * @param customEvent The custom event that won't be notified by MPAdColonyRouterDelegate.
+ */
+- (void)removeGlobalCustomEvent:(id<MPAdColonyRouterDelegate>)customEvent;
+
+/*
+ * Notifies the registered delegates (registered via addGlobalCustomEvent: method)
+ * that the AdColony SDK finished to configure
+ *
+ */
+- (void)onConfigured;
+
+- (void)onAdDidFailToLoad:(NSString *)zoneID withError:(NSError *)error;
 
 @end
 
@@ -68,6 +104,14 @@
  */
 - (void)zoneDidExpire;
 
+
+- (void)zoneDidFailToLoad:(NSError *)error;
+
+- (void)onAdAttemptFinished:(BOOL)shown inZone:(NSString *)zoneID;
+
+- (void)onAdStartedInZone:(NSString *)zoneID;
+
+
 @optional
 
 /*
@@ -75,5 +119,10 @@
  * video.
  */
 - (void)shouldRewardUserWithReward:(MPRewardedVideoReward *)reward;
+
+/*
+ * This method is called when Ad Colony was successfully configured.
+ */
++ (void)configured;
 
 @end

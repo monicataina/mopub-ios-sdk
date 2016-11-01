@@ -122,6 +122,14 @@
  */
 - (void)handleCustomEventInvalidated;
 
+/*
+ * Override this method to assign an identifier for it.
+ *
+ * Call this method to retrieve the custom event identifier for a class (which triggered an event)
+ * Default value is -1
+ */
++ (int)getCustomEventIdentifier;
+
 @end
 
 @protocol MPRewardedVideoCustomEventDelegate <NSObject>

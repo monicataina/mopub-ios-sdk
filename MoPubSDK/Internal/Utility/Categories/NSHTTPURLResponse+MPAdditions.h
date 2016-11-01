@@ -9,8 +9,8 @@
 
 extern NSString * const kMoPubHTTPHeaderContentType;
 
-@interface NSHTTPURLResponse (MPAdditions)
+@interface MPAdditions_NSHTTPURLResponse : NSObject
 
-- (NSStringEncoding)stringEncodingFromContentType:(NSString *)contentType;
++ (NSStringEncoding)stringEncodingFromContentType:(NSString *)contentType;// fromNSHTTPURLResponse:(NSHTTPURLResponse *)response;
 
 @end

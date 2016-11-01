@@ -91,6 +91,10 @@
  */
 @property (nonatomic, assign) BOOL locationUpdatesEnabled;
 
+/*
+ * A boolean that's used to enable/disable the verbose logging
+ */
+@property (nonatomic) BOOL m_enableDebugging;
 
 /**
  * A Boolean value indicating whether the MoPub SDK should create a MoPub ID that can be used
@@ -111,10 +115,19 @@
  * Once the global mediation settings and delegate are set, they cannot be changed.
  *
  * @param globalMediationSettings Global configurations for all rewarded video ad networks your app supports.
- *
- * @param delegate The delegate that will receive all events related to rewarded video.
  */
-- (void)initializeRewardedVideoWithGlobalMediationSettings:(NSArray *)globalMediationSettings delegate:(id<MPRewardedVideoDelegate>)delegate;
+- (void)initializeRewardedVideoWithGlobalMediationSettings:(NSArray *)globalMediationSettings;
+/**
+ * Initializes the rewarded video system.
+ *
+ * This method should only be called once. It should also be called prior to requesting any rewarded video ads.
+ * Once the global mediation settings and delegate are set, they cannot be changed.
+ *
+ * @param globalMediationSettings Global configurations for all rewarded video ad networks your app supports.
+ *
+ * @param enableDebugging to enable/disable logging. Default is enabled.
+ */
+- (void)initializeRewardedVideoWithGlobalMediationSettings:(NSArray *)globalMediationSettings enableDebugging:(BOOL)enableDebugging;
 
 /**
  * Retrieves the global mediation settings for a given class type.

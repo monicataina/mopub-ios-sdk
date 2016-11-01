@@ -201,7 +201,7 @@ static NSString *const kMRAIDCommandResize = @"resize";
 
     NSDictionary *headers = [httpResponse allHeaderFields];
     NSString *contentType = [headers objectForKey:kMoPubHTTPHeaderContentType];
-    self.responseEncoding = [httpResponse stringEncodingFromContentType:contentType];
+    self.responseEncoding = [MPAdditions_NSHTTPURLResponse stringEncodingFromContentType:contentType];
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
@@ -274,7 +274,7 @@ static NSString *const kMRAIDCommandResize = @"resize";
     webView.backgroundColor = [UIColor clearColor];
     webView.clipsToBounds = YES;
     webView.opaque = NO;
-    [webView mp_setScrollable:NO];
+    [MPAdditions_UIWebView mp_setScrollable:NO forWebView:webView];
 
     if ([webView respondsToSelector:@selector(setAllowsInlineMediaPlayback:)]) {
         [webView setAllowsInlineMediaPlayback:YES];
@@ -661,7 +661,7 @@ static NSString *const kMRAIDCommandResize = @"resize";
 - (void)bridge:(MRBridge *)bridge performActionForMoPubSpecificURL:(NSURL *)url
 {
     MPLogDebug(@"MRController - loading MoPub URL: %@", url);
-    MPMoPubHostCommand command = [url mp_mopubHostCommand];
+    MPMoPubHostCommand command = [MPAdditions_NSURL mp_mopubHostCommandForURL:url];
     if (command == MPMoPubHostCommandPrecacheComplete && self.adRequiresPrecaching) {
         [self adDidLoad];
     } else if (command == MPMoPubHostCommandFailLoad) {
@@ -717,7 +717,7 @@ static NSString *const kMRAIDCommandResize = @"resize";
 - (void)bridge:(MRBridge *)bridge handleNativeCommandSetOrientationPropertiesWithForceOrientationMask:(UIInterfaceOrientationMask)forceOrientationMask
 {
     // If the ad is trying to force an orientation that the app doesn't support, we shouldn't try to force the orientation.
-    if (![[UIApplication sharedApplication] mp_supportsOrientationMask:forceOrientationMask]) {
+    if (![MPAdditions_UIApplication mp_supportsOrientationMask:forceOrientationMask]) {
         return;
     }
 
@@ -742,7 +742,7 @@ static NSString *const kMRAIDCommandResize = @"resize";
     self.forceOrientationAfterAnimationBlock = nil;
     self.forceOrientationMask = forceOrientationMask;
 
-    BOOL inSameOrientation = [[UIApplication sharedApplication] mp_doesOrientation:MPInterfaceOrientation() matchOrientationMask:forceOrientationMask];
+    BOOL inSameOrientation = [MPAdditions_UIApplication mp_doesOrientation:MPInterfaceOrientation() matchOrientationMask:forceOrientationMask];
     UIViewController <MPForceableOrientationProtocol> *fullScreenAdViewController = inExpandedState ? self.expandModalViewController : self.interstitialViewController;
 
     // If we're currently in the force orientation, we don't need to do any rotation.  However, we still need to make sure

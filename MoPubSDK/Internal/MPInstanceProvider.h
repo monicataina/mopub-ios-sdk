@@ -31,6 +31,7 @@
 @class MPRewardedVideoAdManager;
 @class MPRewardedVideoAdapter;
 @class MPRewardedVideoCustomEvent;
+@protocol MPRewardedVideoDelegate;
 @protocol MPRewardedVideoAdapterDelegate;
 @protocol MPRewardedVideoCustomEventDelegate;
 @protocol MPRewardedVideoAdManagerDelegate;
@@ -55,6 +56,7 @@
 @protocol MRNativeCommandHandlerDelegate;
 
 //Native
+#if MP_HAS_NATIVE_PACKAGE
 @protocol MPNativeCustomEventDelegate;
 @class MPNativeCustomEvent;
 @class MPNativeAdSource;
@@ -64,6 +66,7 @@
 @class MPStreamAdPlacer;
 @class MPAdPositioning;
 @protocol MPNativeAdRenderer;
+#endif
 
 @interface MPInstanceProvider : NSObject
 
@@ -90,7 +93,7 @@
                                                                             configuration:(MPAdConfiguration *)configuration;
 
 #pragma mark - Rewarded Video
-- (MPRewardedVideoAdManager *)buildRewardedVideoAdManagerWithAdUnitID:(NSString *)adUnitID delegate:(id<MPRewardedVideoAdManagerDelegate>)delegate;
+- (MPRewardedVideoAdManager *)buildRewardedVideoAdManagerWithAdUnitID:(NSString *)adUnitID delegate:(id<MPRewardedVideoAdManagerDelegate>)delegate rewardDelegate:(id<MPRewardedVideoDelegate>)rewardDelegate;
 - (MPRewardedVideoAdapter *)buildRewardedVideoAdapterWithDelegate:(id<MPRewardedVideoAdapterDelegate>)delegate;
 - (MPRewardedVideoCustomEvent *)buildRewardedVideoCustomEventFromCustomClass:(Class)customClass delegate:(id<MPRewardedVideoCustomEventDelegate>)delegate;
 
@@ -114,11 +117,13 @@
 
 #pragma mark - Native
 
+#if MP_HAS_NATIVE_PACKAGE
 - (MPNativeCustomEvent *)buildNativeCustomEventFromCustomClass:(Class)customClass
                                                       delegate:(id<MPNativeCustomEventDelegate>)delegate;
 - (MPNativeAdSource *)buildNativeAdSourceWithDelegate:(id<MPNativeAdSourceDelegate>)delegate;
 - (MPNativePositionSource *)buildNativePositioningSource;
 - (MPStreamAdPlacementData *)buildStreamAdPlacementDataWithPositioning:(MPAdPositioning *)positioning;
 - (MPStreamAdPlacer *)buildStreamAdPlacerWithViewController:(UIViewController *)controller adPositioning:(MPAdPositioning *)positioning rendererConfigurations:(NSArray *)rendererConfigurations;
+#endif
 
 @end

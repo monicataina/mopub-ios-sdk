@@ -5,6 +5,7 @@
 //  Copyright (c) 2015 MoPub. All rights reserved.
 //
 
+#import "MoPub.h"
 #import "MPVungleRouter.h"
 #import "MPInstanceProvider+Vungle.h"
 #import "MPLogging.h"
@@ -36,29 +37,29 @@ static const NSTimeInterval VungleInitTimeout = 2.0;
 
 + (MPVungleRouter *)sharedRouter
 {
-    return [[MPInstanceProvider sharedProvider] sharedMPVungleRouter];
+    return [MPVungleInstanceProvider sharedMPVungleRouterFrom:[MPInstanceProvider sharedProvider]];
 }
 
-- (void)requestInterstitialAdWithCustomEventInfo:(NSDictionary *)info delegate:(id<MPVungleRouterDelegate>)delegate
+- (void)requestInterstitialAdWithCustomEventInfo:(NSDictionary *)info delegate:(id<MPVungleRouterDelegate>)delegate logger:(id<VungleSDKLogger>) logger
 {
     if (!self.isAdPlaying) {
-        [self requestAdWithCustomEventInfo:info delegate:delegate];
+        [self requestAdWithCustomEventInfo:info delegate:delegate logger:logger];
     } else {
         [delegate vungleAdDidFailToLoad:nil];
     }
 }
 
-- (void)requestRewardedVideoAdWithCustomEventInfo:(NSDictionary *)info delegate:(id<MPVungleRouterDelegate>)delegate
+- (void)requestRewardedVideoAdWithCustomEventInfo:(NSDictionary *)info delegate:(id<MPVungleRouterDelegate>)delegate logger:(id<VungleSDKLogger>) logger
 {
     if (!self.isAdPlaying) {
-        [self requestAdWithCustomEventInfo:info delegate:delegate];
+        [self requestAdWithCustomEventInfo:info delegate:delegate logger:logger];
     } else {
         NSError *error = [NSError errorWithDomain:MoPubRewardedVideoAdsSDKDomain code:MPRewardedVideoAdErrorUnknown userInfo:nil];
         [delegate vungleAdDidFailToLoad:error];
     }
 }
 
-- (void)requestAdWithCustomEventInfo:(NSDictionary *)info delegate:(id<MPVungleRouterDelegate>)delegate
+- (void)requestAdWithCustomEventInfo:(NSDictionary *)info delegate:(id<MPVungleRouterDelegate>)delegate logger:(id<VungleSDKLogger>) logger
 {
     self.delegate = delegate;
 
@@ -74,6 +75,12 @@ static const NSTimeInterval VungleInitTimeout = 2.0;
         [[VungleSDK sharedSDK] performSelector:@selector(setPluginName:version:) withObject:@"mopub" withObject:VunglePluginVersion];
 #pragma clang diagnostic pop
 
+        [[VungleSDK sharedSDK] setLoggingEnabled:[[MoPub sharedInstance] m_enableDebugging]];
+        if(logger && [[MoPub sharedInstance] m_enableDebugging])
+        {
+            [[VungleSDK sharedSDK] attachLogger:logger];
+        }
+        
         [[VungleSDK sharedSDK] startWithAppId:appId];
         [[VungleSDK sharedSDK] setDelegate:self];
 

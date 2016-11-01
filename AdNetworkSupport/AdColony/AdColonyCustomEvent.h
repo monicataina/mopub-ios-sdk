@@ -29,7 +29,10 @@
  * @param appId The application's Ad Colony App ID.
  * @param allZoneIds All the possible zone IDs the application may use across all ad formats.
  * @param customerId The user's id for the app.
+ * @param zoneId The zone id which is going to be requested after configuring AdColony SDK
+ *
+ * returns YES if AdColony configure was called
  */
-+ (void)initializeAdColonyCustomEventWithAppId:(NSString *)appId allZoneIds:(NSArray *)allZoneIds customerId:(NSString *)customerId;
++ (BOOL)initializeAdColonyCustomEventWithAppId:(NSString *)appId allZoneIds:(NSArray *)allZoneIds customerId:(NSString *)customerId forZoneId:(NSString *)zoneId;
 
 @end

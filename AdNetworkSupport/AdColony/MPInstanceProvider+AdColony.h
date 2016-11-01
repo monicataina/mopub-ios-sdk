@@ -12,8 +12,9 @@
  */
 @class MPAdColonyRouter;
 
-@interface MPInstanceProvider (AdColony)
+//use a MoPub's class instead of a category so that I can force to initialize it even without -ObjC flag
+@interface MPAdColonyInstanceProvider : NSObject 
 
-- (MPAdColonyRouter *)sharedMPAdColonyRouter;
++ (MPAdColonyRouter *)sharedMPAdColonyRouterFrom:(MPInstanceProvider *)provider;
 
 @end

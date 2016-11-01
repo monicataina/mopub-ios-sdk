@@ -6,7 +6,15 @@
 #import "UIButton+MPAdditions.h"
 #import <objc/runtime.h>
 
-@implementation UIButton (MPAdditions)
+@implementation MPAdditions_UIButton
+
+- (instancetype)init
+{
+    self = [super init];
+    self.mpUIControl = (MPAdditions_UIControl *)self;
+    
+    return self;
+}
 
 - (UIEdgeInsets)mp_TouchAreaInsets
 {

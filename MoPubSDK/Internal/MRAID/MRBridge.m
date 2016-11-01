@@ -61,7 +61,7 @@ static NSString * const kMraidURLScheme = @"mraid";
             // Once done loading from the file, execute the javascript and load the html into the web view.
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self executeJavascript:mraidString];
-                [self.webView disableJavaScriptDialogs];
+                [MPAdditions_UIWebView disableJavaScriptDialogsForWebView:self.webView];
                 [self.webView loadHTMLString:HTML baseURL:baseURL];
             });
         });
@@ -131,7 +131,7 @@ static NSString * const kMraidURLScheme = @"mraid";
     NSURL *url = [request URL];
     NSMutableString *urlString = [NSMutableString stringWithString:[url absoluteString]];
     NSString *scheme = url.scheme;
-
+    
     if ([scheme isEqualToString:kMraidURLScheme]) {
         // Some native commands such as useCustomClose should be allowed to run even if we're not handling requests.
         // The command handler will make sure we don't execute native commands that aren't allowed to execute while we're not handling requests.
@@ -140,7 +140,7 @@ static NSString * const kMraidURLScheme = @"mraid";
         NSDictionary *properties = MPDictionaryFromQueryString(url.query);
         [self.nativeCommandHandler handleNativeCommand:command withProperties:properties];
         return NO;
-    } else if ([url mp_isMoPubScheme]) {
+    } else if ([MPAdditions_NSURL mp_isMoPubSchemeForURL:url]) {
         [self.delegate bridge:self performActionForMoPubSpecificURL:url];
         return NO;
     } else if ([scheme isEqualToString:@"ios-log"]) {
@@ -156,14 +156,14 @@ static NSString * const kMraidURLScheme = @"mraid";
         return NO;
     }
 
-    if ([url mp_hasTelephoneScheme] || [url mp_hasTelephonePromptScheme]) {
+    if ([MPAdditions_NSURL mp_hasTelephoneSchemeForURL:url] || [MPAdditions_NSURL mp_hasTelephonePromptSchemeForURL:url]) {
         [self.delegate bridge:self handleDisplayForDestinationURL:url];
         return NO;
     }
 
     BOOL isLoading = [self.delegate isLoadingAd];
     BOOL userInteractedWithWebView = [self.delegate hasUserInteractedWithWebViewForBridge:self];
-    BOOL safeToAutoloadLink = navigationType == UIWebViewNavigationTypeLinkClicked || userInteractedWithWebView || [url mp_isSafeForLoadingWithoutUserAction];
+    BOOL safeToAutoloadLink = navigationType == UIWebViewNavigationTypeLinkClicked || userInteractedWithWebView || [MPAdditions_NSURL mp_isSafeForLoadingWithoutUserActionForURL:url];
 
     if (!isLoading && (navigationType == UIWebViewNavigationTypeOther || navigationType == UIWebViewNavigationTypeLinkClicked)) {
         BOOL iframe = ![request.URL isEqual:request.mainDocumentURL];
@@ -184,7 +184,7 @@ static NSString * const kMraidURLScheme = @"mraid";
 
 - (void)webViewDidStartLoad:(UIWebView *)webView
 {
-    [webView disableJavaScriptDialogs];
+    [MPAdditions_UIWebView disableJavaScriptDialogsForWebView:webView];
 }
 
 - (void)webViewDidFinishLoad:(UIWebView *)webView

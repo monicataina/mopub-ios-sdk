@@ -32,7 +32,9 @@
 - (void)requestInterstitialWithCustomEventInfo:(NSDictionary *)info
 {
     self.handledAdAvailable = NO;
-    [[MPVungleRouter sharedRouter] requestInterstitialAdWithCustomEventInfo:info delegate:self];
+    
+    //TODO: retrieve the logger from mediation settings
+    [[MPVungleRouter sharedRouter] requestInterstitialAdWithCustomEventInfo:info delegate:self logger:nil];
 }
 
 - (void)showInterstitialFromRootViewController:(UIViewController *)rootViewController

@@ -22,11 +22,11 @@ static NSString * const kMoPubFailLoadHost = @"failLoad";
 static NSString * const kMoPubPrecacheCompleteHost = @"precacheComplete";
 static NSString * const kMoPubRewardedVideoEndedHost = @"rewardedVideoEnded";
 
-@implementation NSURL (MPAdditions)
+@implementation MPAdditions_NSURL
 
-- (NSString *)mp_queryParameterForKey:(NSString *)key
++ (NSString *)mp_queryParameterForKey:(NSString *)key forURL:(NSURL *)url
 {
-    NSArray *queryElements = [self.query componentsSeparatedByString:@"&"];
+    NSArray *queryElements = [url.query componentsSeparatedByString:@"&"];
     for (NSString *element in queryElements) {
         NSArray *keyAndValue = [element componentsSeparatedByString:@"="];
         if (keyAndValue.count >= 2 &&
@@ -38,10 +38,10 @@ static NSString * const kMoPubRewardedVideoEndedHost = @"rewardedVideoEnded";
     return nil;
 }
 
-- (NSArray *)mp_queryParametersForKey:(NSString *)key
++ (NSArray *)mp_queryParametersForKey:(NSString *)key forURL:(NSURL *)url
 {
     NSMutableArray *matchingParameters = [NSMutableArray array];
-    NSArray *queryElements = [self.query componentsSeparatedByString:@"&"];
+    NSArray *queryElements = [url.query componentsSeparatedByString:@"&"];
     for (NSString *element in queryElements) {
         NSArray *keyAndValue = [element componentsSeparatedByString:@"="];
         if (keyAndValue.count >= 2 &&
@@ -53,10 +53,10 @@ static NSString * const kMoPubRewardedVideoEndedHost = @"rewardedVideoEnded";
     return [NSArray arrayWithArray:matchingParameters];
 }
 
-- (NSDictionary *)mp_queryAsDictionary
++ (NSDictionary *)mp_queryAsDictionaryForURL:(NSURL *)url
 {
     NSMutableDictionary *queryDict = [NSMutableDictionary dictionary];
-    NSArray *queryElements = [self.query componentsSeparatedByString:@"&"];
+    NSArray *queryElements = [url.query componentsSeparatedByString:@"&"];
     for (NSString *element in queryElements) {
         NSArray *keyVal = [element componentsSeparatedByString:@"="];
         if (keyVal.count >= 2) {
@@ -69,32 +69,32 @@ static NSString * const kMoPubRewardedVideoEndedHost = @"rewardedVideoEnded";
     return queryDict;
 }
 
-- (BOOL)mp_hasTelephoneScheme
++ (BOOL)mp_hasTelephoneSchemeForURL:(NSURL *)url
 {
-    return [[[self scheme] lowercaseString] isEqualToString:kTelephoneScheme];
+    return [[[url scheme] lowercaseString] isEqualToString:kTelephoneScheme];
 }
 
-- (BOOL)mp_hasTelephonePromptScheme
++ (BOOL)mp_hasTelephonePromptSchemeForURL:(NSURL *)url
 {
-    return [[[self scheme] lowercaseString] isEqualToString:kTelephonePromptScheme];
+    return [[[url scheme] lowercaseString] isEqualToString:kTelephonePromptScheme];
 }
 
-- (BOOL)mp_isSafeForLoadingWithoutUserAction
++ (BOOL)mp_isSafeForLoadingWithoutUserActionForURL:(NSURL *)url
 {
-    return [[self scheme].lowercaseString isEqualToString:@"http"] ||
-        [[self scheme].lowercaseString isEqualToString:@"https"] ||
-        [[self scheme].lowercaseString isEqualToString:@"about"];
+    return [[url scheme].lowercaseString isEqualToString:@"http"] ||
+        [[url scheme].lowercaseString isEqualToString:@"https"] ||
+        [[url scheme].lowercaseString isEqualToString:@"about"];
 }
 
-- (BOOL)mp_isMoPubScheme
++ (BOOL)mp_isMoPubSchemeForURL:(NSURL *)url
 {
-    return [[self scheme] isEqualToString:kMoPubURLScheme];
+    return [[url scheme] isEqualToString:kMoPubURLScheme];
 }
 
-- (MPMoPubShareHostCommand)mp_MoPubShareHostCommand
++ (MPMoPubShareHostCommand)mp_MoPubShareHostCommandForURL:(NSURL *)url
 {
-    NSString *host = [self host];
-    if (![self mp_isMoPubShareScheme]) {
+    NSString *host = [url host];
+    if (![self mp_isMoPubShareSchemeForURL:url]) {
         return MPMoPubShareHostCommandUnrecognized;
     } else if ([host isEqualToString:kMoPubShareTweetHost]) {
         return MPMoPubShareHostCommandTweet;
@@ -103,10 +103,10 @@ static NSString * const kMoPubRewardedVideoEndedHost = @"rewardedVideoEnded";
     }
 }
 
-- (MPMoPubHostCommand)mp_mopubHostCommand
++ (MPMoPubHostCommand)mp_mopubHostCommandForURL:(NSURL *)url
 {
-    NSString *host = [self host];
-    if (![self mp_isMoPubScheme]) {
+    NSString *host = [url host];
+    if (![self mp_isMoPubSchemeForURL:url]) {
         return MPMoPubHostCommandUnrecognized;
     } else if ([host isEqualToString:kMoPubCloseHost]) {
         return MPMoPubHostCommandClose;
@@ -123,9 +123,9 @@ static NSString * const kMoPubRewardedVideoEndedHost = @"rewardedVideoEnded";
     }
 }
 
-- (BOOL)mp_isMoPubShareScheme
++ (BOOL)mp_isMoPubShareSchemeForURL:(NSURL *)url
 {
-    return [[self scheme] isEqualToString:kMoPubShareScheme];
+    return [[url scheme] isEqualToString:kMoPubShareScheme];
 }
 
 @end

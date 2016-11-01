@@ -68,31 +68,31 @@ typedef NSUInteger MPInterstitialOrientationType;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-@interface NSString (MPAdditions)
+@interface MPAdditions_NSString : NSObject
 
 /*
  * Returns string with reserved/unsafe characters encoded.
  */
-- (NSString *)mp_URLEncodedString;
++ (NSString *)mp_URLEncodedString:(NSString*)string;
 
 @end
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-@interface UIDevice (MPAdditions)
+@interface MPAdditions_UIDevice : NSObject 
 
-- (NSString *)mp_hardwareDeviceName;
++ (NSString *)mp_hardwareDeviceName;
 
 @end
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-@interface UIApplication (MPAdditions)
+@interface MPAdditions_UIApplication : NSObject
 
 // Correct way to hide/show the status bar on pre-ios 7.
-- (void)mp_preIOS7setApplicationStatusBarHidden:(BOOL)hidden;
-- (BOOL)mp_supportsOrientationMask:(UIInterfaceOrientationMask)orientationMask;
-- (BOOL)mp_doesOrientation:(UIInterfaceOrientation)orientation matchOrientationMask:(UIInterfaceOrientationMask)orientationMask;
++ (void)mp_preIOS7setApplicationStatusBarHidden:(BOOL)hidden;
++ (BOOL)mp_supportsOrientationMask:(UIInterfaceOrientationMask)orientationMask;
++ (BOOL)mp_doesOrientation:(UIInterfaceOrientation)orientation matchOrientationMask:(UIInterfaceOrientationMask)orientationMask;
 
 @end
 

@@ -12,12 +12,21 @@
 #import "MPVungleRouter.h"
 #import "MPRewardedVideoError.h"
 #import "VungleInstanceMediationSettings.h"
+#import "MPInstanceProvider+Vungle.h"
+
+static int sVungleIdentifier = -1;
 
 @interface VungleRewardedVideoCustomEvent ()  <MPVungleRouterDelegate>
 
 @end
 
 @implementation VungleRewardedVideoCustomEvent
+
++(void)initialize
+{
+    //force loading this class without -ObjC flag
+    [MPVungleInstanceProvider initialize];
+}
 
 - (void)dealloc
 {
@@ -26,7 +35,10 @@
 
 - (void)requestRewardedVideoWithCustomEventInfo:(NSDictionary *)info
 {
-    [[MPVungleRouter sharedRouter] requestRewardedVideoAdWithCustomEventInfo:info delegate:self];
+    VungleInstanceMediationSettings *settings = [self.delegate instanceMediationSettingsForClass:[VungleInstanceMediationSettings class]];
+    id<VungleSDKLogger> logger = settings.logger;
+    
+    [[MPVungleRouter sharedRouter] requestRewardedVideoAdWithCustomEventInfo:info delegate:self logger:logger];
 }
 
 - (BOOL)hasAdAvailable
@@ -56,6 +68,16 @@
 - (void)handleAdPlayedForCustomEventNetwork
 {
     //empty implementation
+}
+
++ (void)setCustomEventIdentifier:(int)identifier
+{
+    sVungleIdentifier = identifier;
+}
+
++ (int)getCustomEventIdentifier
+{
+    return sVungleIdentifier;
 }
 
 #pragma mark - MPVungleDelegate

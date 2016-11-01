@@ -20,4 +20,6 @@
 
 @interface VungleRewardedVideoCustomEvent : MPRewardedVideoCustomEvent
 
++(void)setCustomEventIdentifier:(int)identifier;
+
 @end

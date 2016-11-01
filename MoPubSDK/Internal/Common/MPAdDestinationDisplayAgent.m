@@ -88,9 +88,9 @@ static NSString * const kDisplayAgentErrorDomain = @"com.mopub.displayagent";
     [self.resolver cancel];
     [self.enhancedDeeplinkFallbackResolver cancel];
 
-    __weak typeof(self) weakSelf = self;
+    __weak __typeof__(self) weakSelf = self;
     self.resolver = [[MPCoreInstanceProvider sharedProvider] buildMPURLResolverWithURL:URL completion:^(MPURLActionInfo *suggestedAction, NSError *error) {
-        typeof(self) strongSelf = weakSelf;
+        __typeof__(self) strongSelf = weakSelf;
         if (strongSelf) {
             if (error) {
                 [strongSelf failedToResolveURLWithError:error];
@@ -176,10 +176,10 @@ static NSString * const kDisplayAgentErrorDomain = @"com.mopub.displayagent";
 
 - (void)handleEnhancedDeeplinkFallbackForRequest:(MPEnhancedDeeplinkRequest *)request;
 {
-    __weak typeof(self) weakSelf = self;
+    __weak __typeof__(self) weakSelf = self;
     [self.enhancedDeeplinkFallbackResolver cancel];
     self.enhancedDeeplinkFallbackResolver = [[MPCoreInstanceProvider sharedProvider] buildMPURLResolverWithURL:request.fallbackURL completion:^(MPURLActionInfo *actionInfo, NSError *error) {
-        typeof(self) strongSelf = weakSelf;
+        __typeof__(self) strongSelf = weakSelf;
         if (strongSelf) {
             if (error) {
                 // If the resolver fails, just treat the entire original URL as a regular deeplink.
@@ -221,7 +221,7 @@ static NSString * const kDisplayAgentErrorDomain = @"com.mopub.displayagent";
 {
     [self hideOverlay];
 
-    if ([URL mp_hasTelephoneScheme] || [URL mp_hasTelephonePromptScheme]) {
+    if ([MPAdditions_NSURL mp_hasTelephoneSchemeForURL:URL] || [MPAdditions_NSURL mp_hasTelephonePromptSchemeForURL:URL]) {
         [self interceptTelephoneURL:URL];
     } else {
         BOOL didOpenSuccessfully = [[UIApplication sharedApplication] openURL:URL];
@@ -235,7 +235,7 @@ static NSString * const kDisplayAgentErrorDomain = @"com.mopub.displayagent";
 - (BOOL)openShareURL:(NSURL *)URL
 {
     MPLogDebug(@"MPAdDestinationDisplayAgent - loading Share URL: %@", URL);
-    MPMoPubShareHostCommand command = [URL mp_MoPubShareHostCommand];
+    MPMoPubShareHostCommand command = [MPAdditions_NSURL mp_MoPubShareHostCommandForURL:URL];
     switch (command) {
         case MPMoPubShareHostCommandTweet:
             return [self.activityViewControllerHelper presentActivityViewControllerWithTweetShareURL:URL];

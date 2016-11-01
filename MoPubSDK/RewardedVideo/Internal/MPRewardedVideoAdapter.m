@@ -75,6 +75,11 @@ static const NSString *kRewardedVideoApiVersion = @"1";
     }
 }
 
+- (MPRewardedVideoCustomEvent*)getCustomEvent
+{
+    return _rewardedVideoCustomEvent;
+}
+
 - (BOOL)hasAdAvailable
 {
     return [self.rewardedVideoCustomEvent hasAdAvailable];
@@ -123,10 +128,10 @@ static const NSString *kRewardedVideoApiVersion = @"1";
     NSString *finalCompletionUrlString = self.configuration.rewardedVideoCompletionUrl;
     if ([self.delegate respondsToSelector:@selector(rewardedVideoCustomerId)] && [self.delegate rewardedVideoCustomerId].length > 0) {
         // self.configuration.rewardedVideoCompletionUrl is already url encoded. Only the customer_id added by the client needs url encoding.
-        NSString *urlEncodedCustomerId = [[self.delegate rewardedVideoCustomerId] mp_URLEncodedString];
+        NSString *urlEncodedCustomerId = [MPAdditions_NSString mp_URLEncodedString:[self.delegate rewardedVideoCustomerId]];
         finalCompletionUrlString = [NSString stringWithFormat:@"%@&customer_id=%@", finalCompletionUrlString, urlEncodedCustomerId];
     }
-    finalCompletionUrlString = [NSString stringWithFormat:@"%@&nv=%@&v=%@", finalCompletionUrlString, [MP_SDK_VERSION mp_URLEncodedString], kRewardedVideoApiVersion];
+    finalCompletionUrlString = [NSString stringWithFormat:@"%@&nv=%@&v=%@", finalCompletionUrlString, [MPAdditions_NSString mp_URLEncodedString:MP_SDK_VERSION], kRewardedVideoApiVersion];
     return [NSURL URLWithString:finalCompletionUrlString];
 }
 
@@ -143,6 +148,15 @@ static const NSString *kRewardedVideoApiVersion = @"1";
 }
 
 #pragma mark - MPRewardedVideoCustomEventDelegate
+
+-(int)getCustomEventIdentifierForClass:(Class)aClass
+{
+     if ([aClass respondsToSelector:@selector(getCustomEventIdentifier)])
+     {
+         return [aClass getCustomEventIdentifier];
+     }
+    return -1;
+}
 
 - (id<MPMediationSettingsProtocol>)instanceMediationSettingsForClass:(Class)aClass
 {

@@ -11,6 +11,7 @@
 @class MPRewardedVideoReward;
 @class CLLocation;
 @protocol MPRewardedVideoAdManagerDelegate;
+@protocol MPRewardedVideoDelegate;
 
 /**
  * `MPRewardedVideoAdManager` represents a rewarded video for a single ad unit ID. This is the object that
@@ -19,16 +20,23 @@
 @interface MPRewardedVideoAdManager : NSObject
 
 @property (nonatomic, weak) id<MPRewardedVideoAdManagerDelegate> delegate;
+@property (nonatomic, weak) id<MPRewardedVideoDelegate> rewardDelegate;
 @property (nonatomic, readonly) NSString *adUnitID;
 @property (nonatomic, strong) NSArray *mediationSettings;
 @property (nonatomic, copy) NSString *customerId;
 
-- (instancetype)initWithAdUnitID:(NSString *)adUnitID delegate:(id<MPRewardedVideoAdManagerDelegate>)delegate;
+- (instancetype)initWithAdUnitID:(NSString *)adUnitID delegate:(id<MPRewardedVideoAdManagerDelegate>)delegate rewardDelegate:(id<MPRewardedVideoDelegate>)rewardDelegate;
 
 /**
  * Returns the custom event class type.
  */
 - (Class)customEventClass;
+
+/**
+ * Called to retrieve the current customEvent identifier. By default it's -1
+ *
+ */
+- (int)getCustomEventIdentifier;
 
 /**
  * Loads a rewarded video ad with the ad manager's ad unit ID.

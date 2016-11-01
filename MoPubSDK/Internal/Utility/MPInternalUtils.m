@@ -9,23 +9,19 @@
 
 @implementation MPInternalUtils
 
-@end
-
-@implementation NSMutableDictionary (MPInternalUtils)
-
-- (void)mp_safeSetObject:(id)obj forKey:(id<NSCopying>)key
++ (void)mp_safeSetObject:(id)obj forKey:(id<NSCopying>)key forDictionary:(NSMutableDictionary*)dictionary
 {
     if (obj != nil) {
-        [self setObject:obj forKey:key];
+        [dictionary setObject:obj forKey:key];
     }
 }
 
-- (void)mp_safeSetObject:(id)obj forKey:(id<NSCopying>)key withDefault:(id)defaultObj
++ (void)mp_safeSetObject:(id)obj forKey:(id<NSCopying>)key withDefault:(id)defaultObj forDictionary:(NSMutableDictionary*)dictionary
 {
     if (obj != nil) {
-        [self setObject:obj forKey:key];
+        [dictionary setObject:obj forKey:key];
     } else {
-        [self setObject:defaultObj forKey:key];
+        [dictionary setObject:defaultObj forKey:key];
     }
 }
 

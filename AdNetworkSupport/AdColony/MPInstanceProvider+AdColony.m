@@ -8,15 +8,14 @@
 #import "MPInstanceProvider+AdColony.h"
 #import "MPAdColonyRouter.h"
 
-@implementation MPInstanceProvider (AdColony)
+@implementation MPAdColonyInstanceProvider
 
-- (MPAdColonyRouter *)sharedMPAdColonyRouter
++ (MPAdColonyRouter *)sharedMPAdColonyRouterFrom:(MPInstanceProvider *)provider
 {
-    return [self singletonForClass:[MPAdColonyRouter class]
-                          provider:^id
-            {
-                return [[MPAdColonyRouter alloc] init];
-            }];
+    return [provider singletonForClass:[MPAdColonyRouter class]
+                              provider:^id{
+                                  return [[MPAdColonyRouter alloc] init];
+                              }];
 }
 
 @end

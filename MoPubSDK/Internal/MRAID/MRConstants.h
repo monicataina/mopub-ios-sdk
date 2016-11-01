@@ -19,6 +19,6 @@ enum {
 };
 typedef NSUInteger MRAdViewPlacementType;
 
-extern NSString *const kOrientationPropertyForceOrientationPortraitKey;
-extern NSString *const kOrientationPropertyForceOrientationLandscapeKey;
-extern NSString *const kOrientationPropertyForceOrientationNoneKey;
+NSString *const kOrientationPropertyForceOrientationPortraitKey = @"portrait";
+NSString *const kOrientationPropertyForceOrientationLandscapeKey = @"landscape";
+NSString *const kOrientationPropertyForceOrientationNoneKey = @"none";

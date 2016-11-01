@@ -52,7 +52,7 @@ CGRect MPApplicationFrame()
 CGRect MPScreenBounds()
 {
     // Prior to iOS 8, window and screen coordinates were fixed and always specified relative to the
-    // deviceâ€™s screen in a portrait orientation. Starting with iOS8, the `fixedCoordinateSpace`
+    // device’s screen in a portrait orientation. Starting with iOS8, the `fixedCoordinateSpace`
     // property was introduced which specifies bounds that always reflect the screen dimensions of
     // the device in a portrait-up orientation.
     CGRect bounds = [UIScreen mainScreen].bounds;
@@ -235,12 +235,12 @@ NSBundle *MPResourceBundleForClass(Class aClass)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-@implementation NSString (MPAdditions)
+@implementation MPAdditions_NSString
 
-- (NSString *)mp_URLEncodedString
++ (NSString *)mp_URLEncodedString:(NSString*)string
 {
     NSString *result = (NSString *)CFBridgingRelease(CFURLCreateStringByAddingPercentEscapes(NULL,
-                                                                           (CFStringRef)self,
+                                                                           (CFStringRef)string,
                                                                            NULL,
                                                                            (CFStringRef)@"!*'();:@&=+$,/?%#[]<>",
                                                                            kCFStringEncodingUTF8));
@@ -251,13 +251,13 @@ NSBundle *MPResourceBundleForClass(Class aClass)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-@implementation UIDevice (MPAdditions)
+@implementation MPAdditions_UIDevice
 
-- (NSString *)mp_hardwareDeviceName
++ (NSString *)mp_hardwareDeviceName
 {
     size_t size;
     sysctlbyname("hw.machine", NULL, &size, NULL, 0);
-    char *machine = malloc(size);
+    char *machine = (char*)malloc(size);
     sysctlbyname("hw.machine", machine, &size, NULL, 0);
     NSString *platform = [NSString stringWithCString:machine encoding:NSUTF8StringEncoding];
     free(machine);
@@ -266,9 +266,9 @@ NSBundle *MPResourceBundleForClass(Class aClass)
 
 @end
 
-@implementation UIApplication (MPAdditions)
+@implementation MPAdditions_UIApplication
 
-- (void)mp_preIOS7setApplicationStatusBarHidden:(BOOL)hidden
++ (void)mp_preIOS7setApplicationStatusBarHidden:(BOOL)hidden
 {
     // Hiding the status bar should use a fade effect.
     // Displaying the status bar should use no animation.
@@ -277,7 +277,7 @@ NSBundle *MPResourceBundleForClass(Class aClass)
     [[UIApplication sharedApplication] setStatusBarHidden:hidden withAnimation:animation];
 }
 
-- (BOOL)mp_supportsOrientationMask:(UIInterfaceOrientationMask)orientationMask
++ (BOOL)mp_supportsOrientationMask:(UIInterfaceOrientationMask)orientationMask
 {
     NSArray *supportedOrientations = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"UISupportedInterfaceOrientations"];
 
@@ -308,7 +308,7 @@ NSBundle *MPResourceBundleForClass(Class aClass)
     return NO;
 }
 
-- (BOOL)mp_doesOrientation:(UIInterfaceOrientation)orientation matchOrientationMask:(UIInterfaceOrientationMask)orientationMask
++ (BOOL)mp_doesOrientation:(UIInterfaceOrientation)orientation matchOrientationMask:(UIInterfaceOrientationMask)orientationMask
 {
     BOOL supportsLandscapeLeft = (orientationMask & UIInterfaceOrientationMaskLandscapeLeft) > 0;
     BOOL supportsLandscapeRight = (orientationMask & UIInterfaceOrientationMaskLandscapeRight) > 0;
@@ -349,7 +349,7 @@ NSBundle *MPResourceBundleForClass(Class aClass)
 
 - (id)initWithURL:(NSURL *)url clickHandler:(MPTelephoneConfirmationControllerClickHandler)clickHandler
 {
-    if (![url mp_hasTelephoneScheme] && ![url mp_hasTelephonePromptScheme]) {
+    if (![MPAdditions_NSURL mp_hasTelephoneSchemeForURL:url] && ![MPAdditions_NSURL mp_hasTelephonePromptSchemeForURL:url]) {
         // Shouldn't be here as the url must have a tel or telPrompt scheme.
         MPLogError(@"Processing URL as a telephone URL when %@ doesn't follow the tel:// or telprompt:// schemes", url.absoluteString);
         return nil;
@@ -375,7 +375,7 @@ NSBundle *MPResourceBundleForClass(Class aClass)
         self.clickHandler = clickHandler;
 
         // We want to manually handle telPrompt scheme alerts.  So we'll convert telPrompt schemes to tel schemes.
-        if ([url mp_hasTelephonePromptScheme]) {
+        if ([MPAdditions_NSURL mp_hasTelephonePromptSchemeForURL:url]) {
             self.telephoneURL = [NSURL URLWithString:[NSString stringWithFormat:@"tel://%@", phoneNumber]];
         } else {
             self.telephoneURL = url;

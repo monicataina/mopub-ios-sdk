@@ -32,9 +32,10 @@
  *
  * @param adUnitID The ad unit ID that ads should be loaded from.
  * @param mediationSettings An array of mediation settings objects that map to networks that may show ads for the ad unit ID. This array
+ * @param delegate The delegate that will receive all events related to rewarded video.
  * should only contain objects for networks you wish to configure. This can be nil.
  */
-+ (void)loadRewardedVideoAdWithAdUnitID:(NSString *)adUnitID withMediationSettings:(NSArray *)mediationSettings;
++ (void)loadRewardedVideoAdWithAdUnitID:(NSString *)adUnitID withMediationSettings:(NSArray *)mediationSettings  delegate:(id<MPRewardedVideoDelegate>)delegate;
 
 /**
  * Loads a rewarded video ad for the given ad unit ID.
@@ -50,8 +51,9 @@
  * @param location Latitude/Longitude that are passed to the MoPub ad server
  * @param mediationSettings An array of mediation settings objects that map to networks that may show ads for the ad unit ID. This array
  * should only contain objects for networks you wish to configure. This can be nil.
+ * @param delegate The delegate that will receive all events related to rewarded video.
  */
-+ (void)loadRewardedVideoAdWithAdUnitID:(NSString *)adUnitID keywords:(NSString *)keywords location:(CLLocation *)location mediationSettings:(NSArray *)mediationSettings;
++ (void)loadRewardedVideoAdWithAdUnitID:(NSString *)adUnitID keywords:(NSString *)keywords location:(CLLocation *)location mediationSettings:(NSArray *)mediationSettings delegate:(id<MPRewardedVideoDelegate>)delegate;
 
 /**
  * Loads a rewarded video ad for the given ad unit ID.
@@ -68,8 +70,9 @@
  * @param customerId This is the ID given to the user by the publisher to identify them in their app
  * @param mediationSettings An array of mediation settings objects that map to networks that may show ads for the ad unit ID. This array
  * should only contain objects for networks you wish to configure. This can be nil.
+ * @param delegate The delegate that will receive all events related to rewarded video.
  */
-+ (void)loadRewardedVideoAdWithAdUnitID:(NSString *)adUnitID keywords:(NSString *)keywords location:(CLLocation *)location customerId:(NSString *)customerId mediationSettings:(NSArray *)mediationSettings;
++ (void)loadRewardedVideoAdWithAdUnitID:(NSString *)adUnitID keywords:(NSString *)keywords location:(CLLocation *)location customerId:(NSString *)customerId mediationSettings:(NSArray *)mediationSettings delegate:(id<MPRewardedVideoDelegate>)delegate;
 
 /**
  * Returns whether or not an ad is available for the given ad unit ID.
@@ -100,80 +103,91 @@
  * This method is called after an ad loads successfully.
  *
  * @param adUnitID The ad unit ID of the ad associated with the event.
+ * @param customClassID The ID from the `MPRewardedVideoCustomEvent` subclass which triggered this event.
  */
-- (void)rewardedVideoAdDidLoadForAdUnitID:(NSString *)adUnitID;
+- (void)rewardedVideoAdDidLoadForAdUnitID:(NSString *)adUnitID forCustomClassID:(int)customClassID;
 
 /**
  * This method is called after an ad fails to load.
  *
  * @param adUnitID The ad unit ID of the ad associated with the event.
+ * @param customClassID The ID from the `MPRewardedVideoCustomEvent` subclass which triggered this event.
  * @param error An error indicating why the ad failed to load.
  */
-- (void)rewardedVideoAdDidFailToLoadForAdUnitID:(NSString *)adUnitID error:(NSError *)error;
+- (void)rewardedVideoAdDidFailToLoadForAdUnitID:(NSString *)adUnitID forCustomClassID:(int)customClassID error:(NSError *)error;
 
 /**
  * This method is called when a previously loaded rewarded video is no longer eligible for presentation.
  *
  * @param adUnitID The ad unit ID of the ad associated with the event.
+ * @param customClassID The ID from the `MPRewardedVideoCustomEvent` subclass which triggered this event.
  */
-- (void)rewardedVideoAdDidExpireForAdUnitID:(NSString *)adUnitID;
+- (void)rewardedVideoAdDidExpireForAdUnitID:(NSString *)adUnitID forCustomClassID:(int)customClassID;
 
 /**
  * This method is called when an attempt to play a rewarded video fails.
  *
  * @param adUnitID The ad unit ID of the ad associated with the event.
+ * @param customClassID The ID from the `MPRewardedVideoCustomEvent` subclass which triggered this event.
  * @param error An error describing why the video couldn't play.
  */
-- (void)rewardedVideoAdDidFailToPlayForAdUnitID:(NSString *)adUnitID error:(NSError *)error;
+- (void)rewardedVideoAdDidFailToPlayForAdUnitID:(NSString *)adUnitID forCustomClassID:(int)customClassID error:(NSError *)error;
 
 /**
  * This method is called when a rewarded video ad is about to appear.
  *
  * @param adUnitID The ad unit ID of the ad associated with the event.
+ * @param customClassID The ID from the `MPRewardedVideoCustomEvent` subclass which triggered this event.
  */
-- (void)rewardedVideoAdWillAppearForAdUnitID:(NSString *)adUnitID;
+- (void)rewardedVideoAdWillAppearForAdUnitID:(NSString *)adUnitID forCustomClassID:(int)customClassID;
 
 /**
  * This method is called when a rewarded video ad has appeared.
  *
  * @param adUnitID The ad unit ID of the ad associated with the event.
+ * @param customClassID The ID from the `MPRewardedVideoCustomEvent` subclass which triggered this event.
  */
-- (void)rewardedVideoAdDidAppearForAdUnitID:(NSString *)adUnitID;
+- (void)rewardedVideoAdDidAppearForAdUnitID:(NSString *)adUnitID forCustomClassID:(int)customClassID;
 
 /**
  * This method is called when a rewarded video ad will be dismissed.
  *
  * @param adUnitID The ad unit ID of the ad associated with the event.
+ * @param customClassID The ID from the `MPRewardedVideoCustomEvent` subclass which triggered this event.
  */
-- (void)rewardedVideoAdWillDisappearForAdUnitID:(NSString *)adUnitID;
+- (void)rewardedVideoAdWillDisappearForAdUnitID:(NSString *)adUnitID forCustomClassID:(int)customClassID;
 
 /**
  * This method is called when a rewarded video ad has been dismissed.
  *
  * @param adUnitID The ad unit ID of the ad associated with the event.
+ * @param customClassID The ID from the `MPRewardedVideoCustomEvent` subclass which triggered this event.
  */
-- (void)rewardedVideoAdDidDisappearForAdUnitID:(NSString *)adUnitID;
+- (void)rewardedVideoAdDidDisappearForAdUnitID:(NSString *)adUnitID forCustomClassID:(int)customClassID;
 
 /**
  * This method is called when the user taps on the ad.
  *
  * @param adUnitID The ad unit ID of the ad associated with the event.
+ * @param customClassID The ID from the `MPRewardedVideoCustomEvent` subclass which triggered this event.
  */
-- (void)rewardedVideoAdDidReceiveTapEventForAdUnitID:(NSString *)adUnitID;
+- (void)rewardedVideoAdDidReceiveTapEventForAdUnitID:(NSString *)adUnitID forCustomClassID:(int)customClassID;
 
 /**
  * This method is called when a rewarded video ad will cause the user to leave the application.
  *
  * @param adUnitID The ad unit ID of the ad associated with the event.
+ * @param customClassID The ID from the `MPRewardedVideoCustomEvent` subclass which triggered this event.
  */
-- (void)rewardedVideoAdWillLeaveApplicationForAdUnitID:(NSString *)adUnitID;
+- (void)rewardedVideoAdWillLeaveApplicationForAdUnitID:(NSString *)adUnitID forCustomClassID:(int)customClassID;
 
 /**
  * This method is called when the user should be rewarded for watching a rewarded video ad.
  *
  * @param adUnitID The ad unit ID of the ad associated with the event.
+ * @param customClassID The ID from the `MPRewardedVideoCustomEvent` subclass which triggered this event.
  * @param reward The object that contains all the information regarding how much you should reward the user.
  */
-- (void)rewardedVideoAdShouldRewardForAdUnitID:(NSString *)adUnitID reward:(MPRewardedVideoReward *)reward;
+- (void)rewardedVideoAdShouldRewardForAdUnitID:(NSString *)adUnitID forCustomClassID:(int)customClassID reward:(MPRewardedVideoReward *)reward;
 
 @end
