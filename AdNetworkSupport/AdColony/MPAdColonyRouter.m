@@ -175,43 +175,4 @@
     }
 }
 
-/*
-- (void)onAdColonyAdAvailabilityChange:(BOOL)available inZone:(NSString *)zoneID
-{
-    id<MPAdColonyRouterDelegate> event = [self.events objectForKey:zoneID];
-
-    if(available)
-    {
-        MPLogInfo(@"AdColony zone %@ just became available", zoneID);
-        if(!event.zoneAvailable)
-        {
-            [event zoneDidLoad];
-        }
-    }
-    else
-    {
-        MPLogInfo(@"AdColony zone %@ just became unavailable", zoneID);
-        if(event.zoneAvailable)
-        {
-            [event zoneDidExpire];
-        }
-    }
-}
- */
-
-- (void)onAdColonyV4VCReward:(BOOL)success currencyName:(NSString *)currencyName currencyAmount:(int)amount inZone:(NSString *)zoneID
-{
-    // If Ad Colony doesn't report success, we won't follow through.
-    if (!success) {
-        return;
-    }
-
-    id<MPAdColonyRouterDelegate> event = [self.events objectForKey:zoneID];
-
-    if ([event respondsToSelector:@selector(shouldRewardUserWithReward:)]) {
-        MPRewardedVideoReward *reward = [[MPRewardedVideoReward alloc] initWithCurrencyType:currencyName amount:@(amount)];
-        [event shouldRewardUserWithReward:reward];
-    }
-}
-
 @end

@@ -190,4 +190,13 @@
  */
 - (void)rewardedVideoAdShouldRewardForAdUnitID:(NSString *)adUnitID forCustomClassID:(int)customClassID reward:(MPRewardedVideoReward *)reward;
 
+/**
+ * This method is called when the user could not be rewarded for watching a rewarded video ad.
+ *
+ * @param adUnitID The ad unit ID of the ad associated with the event.
+ * @param customClassID The ID from the `MPRewardedVideoCustomEvent` subclass which triggered this event.
+ * @param reward The object that contains all the information regarding how much you should reward the user.
+ */
+- (void)rewardedVideoAdFailedToRewardForAdUnitID:(NSString *)adUnitID forCustomClassID:(int)customClassID reward:(MPRewardedVideoReward *)reward;
+
 @end

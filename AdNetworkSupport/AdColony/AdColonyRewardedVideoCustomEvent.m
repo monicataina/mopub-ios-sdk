@@ -113,7 +113,14 @@ static int sAdColonyIdentifier = -1;
             /* Set the zone's reward handler block */
             zone.reward = ^(BOOL success, NSString* currencyName, int amount) {
                 MPRewardedVideoReward *reward = [[MPRewardedVideoReward alloc] initWithCurrencyType:currencyName amount:@(amount)];
-                [self shouldRewardUserWithReward:reward];
+                if(success)
+                {
+                    [self shouldRewardUserWithReward:reward];
+                }
+                else
+                {
+                    [self failedToRewardUserWithReward:reward];
+                }
             };
         }
         
@@ -192,6 +199,11 @@ static int sAdColonyIdentifier = -1;
 - (void)shouldRewardUserWithReward:(MPRewardedVideoReward *)reward
 {
     [self.delegate rewardedVideoShouldRewardUserForCustomEvent:self reward:reward];
+}
+
+- (void)failedToRewardUserWithReward:(MPRewardedVideoReward *)reward
+{
+    [self.delegate rewardedVideoFailedToRewardUserForCustomEvent:self reward:reward];
 }
 
 @end

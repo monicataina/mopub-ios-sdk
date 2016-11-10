@@ -233,6 +233,13 @@ static MPRewardedVideo *gSharedInstance = nil;
         [manager.rewardDelegate rewardedVideoAdShouldRewardForAdUnitID:manager.adUnitID forCustomClassID:customEventID reward:reward];
     }
 }
+- (void)rewardedVideoFailedToRewardUserForAdManager:(MPRewardedVideoAdManager *)manager reward:(MPRewardedVideoReward *)reward
+{
+    if ([manager.rewardDelegate respondsToSelector:@selector(rewardedVideoAdFailedToRewardForAdUnitID:forCustomClassID:reward:)]) {
+        int customEventID = [manager getCustomEventIdentifier];
+        [manager.rewardDelegate rewardedVideoAdFailedToRewardForAdUnitID:manager.adUnitID forCustomClassID:customEventID reward:reward];
+    }
+}
 
 #pragma mark - rewarded video server to server callback
 

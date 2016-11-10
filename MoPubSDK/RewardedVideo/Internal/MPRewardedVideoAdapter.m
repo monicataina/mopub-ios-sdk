@@ -265,6 +265,27 @@ static const NSString *kRewardedVideoApiVersion = @"1";
         }
     }
 }
+- (void)rewardedVideoFailedToRewardUserForCustomEvent:(MPRewardedVideoCustomEvent *)customEvent reward:(MPRewardedVideoReward *)reward
+{
+    if (self.configuration && self.configuration.rewardedVideoCompletionUrl) {
+        // server to server callback
+        [[MPRewardedVideo sharedInstance] startRewardedVideoConnectionWithUrl:[self rewardedVideoCompletionUrlByAppendingClientParams]];
+    } else {
+        // server to server not enabled. It uses client side rewarding.
+        if (self.configuration) {
+            MPRewardedVideoReward *mopubConfiguredReward = self.configuration.rewardedVideoReward;
+            // If reward is set in adConfig, use reward that's set in adConfig.
+            // Currency type has to be defined in mopubConfiguredReward in order to use mopubConfiguredReward.
+            if (mopubConfiguredReward && mopubConfiguredReward.currencyType != kMPRewardedVideoRewardCurrencyTypeUnspecified){
+                reward = mopubConfiguredReward;
+            }
+        }
+        
+        if (reward) {
+            [self.delegate rewardedVideoFailedToRewardUserForAdapter:self reward:reward];
+        }
+    }
+}
 
 - (NSString *)customerIdForRewardedVideoCustomEvent:(MPRewardedVideoCustomEvent *)customEvent
 {

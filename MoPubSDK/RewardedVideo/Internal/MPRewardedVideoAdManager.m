@@ -256,6 +256,10 @@
 {
     [self.delegate rewardedVideoShouldRewardUserForAdManager:self reward:reward];
 }
+- (void)rewardedVideoFailedToRewardUserForAdapter:(MPRewardedVideoAdapter *)adapter reward:(MPRewardedVideoReward *)reward
+{
+    [self.delegate rewardedVideoFailedToRewardUserForAdManager:self reward:reward];
+}
 
 - (NSString *)rewardedVideoAdUnitId
 {

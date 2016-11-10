@@ -121,6 +121,12 @@
 - (void)shouldRewardUserWithReward:(MPRewardedVideoReward *)reward;
 
 /*
+ * This method is called when the application user could not be rewarded for watching a rewarded
+ * video.
+ */
+- (void)failedToRewardUserWithReward:(MPRewardedVideoReward *)reward;
+
+/*
  * This method is called when Ad Colony was successfully configured.
  */
 + (void)configured;
