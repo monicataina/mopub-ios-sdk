@@ -17,6 +17,7 @@
 @property (nonatomic, assign) BOOL isAdPlaying;
 
 @property (nonatomic, strong) NSMutableDictionary* loadingAds;
+@property (nonatomic, strong) NSMutableDictionary* isWaitingForResponsePerLoadingAd;
 @property (nonatomic, strong) NSMutableDictionary* delegatePerLoadingAd;
 @property (nonatomic, strong) NSMutableDictionary* rewardCurrencyPerLoadingAd;
 @property (nonatomic, strong) NSMutableDictionary* rewardAmountPerLoadingAd;
@@ -49,6 +50,7 @@
         _delegatePerLoadingAd = [[NSMutableDictionary alloc] init];
         _rewardCurrencyPerLoadingAd = [[NSMutableDictionary alloc] init];
         _rewardAmountPerLoadingAd = [[NSMutableDictionary alloc] init];
+        _isWaitingForResponsePerLoadingAd = [[NSMutableDictionary alloc] init];
     }
     return self;
 }
@@ -60,6 +62,7 @@
     [_delegatePerLoadingAd release];
     [_rewardCurrencyPerLoadingAd release];
     [_rewardAmountPerLoadingAd release];
+    [_isWaitingForResponsePerLoadingAd release];
     [super dealloc];
 }
 
@@ -101,20 +104,24 @@
         FBRewardedVideoAd* loadingAd = [self.loadingAds objectForKey:zoneId];
         if(loadingAd)
         {
-            if(loadingAd.isAdValid)
+            if(self.isWaitingForResponsePerLoadingAd)
             {
-                [delegate facebookFetchCompleted];
-                return;
+                NSNumber* isWaitingForResponse = [self.isWaitingForResponsePerLoadingAd objectForKey:zoneId];
+                if(isWaitingForResponse && [isWaitingForResponse boolValue] == YES)
+                {
+                    //if I am already loading the ad, then wait for the response callback
+                    return;
+                }
             }
-            else
-            {
-                loadingAd = NULL;
-            }
+            
+            [loadingAd release];
+            loadingAd = NULL;
         }
         loadingAd = [[FBRewardedVideoAd alloc] initWithPlacementID:zoneId withUserID:userId withCurrency:currency withAmount:amount];
         [self.loadingAds setObject:loadingAd forKey:zoneId];
         [self.delegatePerLoadingAd removeObjectForKey:zoneId];
         [self.delegatePerLoadingAd setObject:delegate forKey:zoneId];
+        [self.isWaitingForResponsePerLoadingAd setObject:[NSNumber numberWithBool:YES] forKey:zoneId];
         [self.rewardCurrencyPerLoadingAd setObject:currency forKey:zoneId];
         [self.rewardAmountPerLoadingAd setObject:[NSNumber numberWithInteger:amount] forKey:zoneId];
         loadingAd.delegate = self;
@@ -214,10 +221,18 @@
  */
 - (void)rewardedVideoAdDidLoad:(FBRewardedVideoAd *)rewardedVideoAd
 {
-    id<MPFacebookRouterDelegate> delegate = [self.delegatePerLoadingAd objectForKey:rewardedVideoAd.placementID];
-    if(delegate)
+    if(self.isWaitingForResponsePerLoadingAd)
     {
-        [delegate facebookFetchCompleted];
+        [self.isWaitingForResponsePerLoadingAd setObject:[NSNumber numberWithBool:NO] forKey:rewardedVideoAd.placementID];
+    }
+    
+    if(self.delegatePerLoadingAd)
+    {
+        id<MPFacebookRouterDelegate> delegate = [self.delegatePerLoadingAd objectForKey:rewardedVideoAd.placementID];
+        if(delegate)
+        {
+            [delegate facebookFetchCompleted];
+        }
     }
 }
 
@@ -240,6 +255,7 @@
         {
             self.isAdClosed = NO;
             self.isRewardCallbackCalled = NO;
+            [self.displayedAd release];
             self.displayedAd = NULL;
             self.delegateForDisplayedAd = NULL;
             self.isAdPlaying = NO;
@@ -274,10 +290,18 @@
  */
 - (void)rewardedVideoAd:(FBRewardedVideoAd *)rewardedVideoAd didFailWithError:(NSError *)error
 {
-    id<MPFacebookRouterDelegate> delegate = [self.delegatePerLoadingAd objectForKey:rewardedVideoAd.placementID];
-    if(delegate)
+    if(self.isWaitingForResponsePerLoadingAd)
     {
-        [delegate facebookDidFailWithError:error];
+        [self.isWaitingForResponsePerLoadingAd setObject:[NSNumber numberWithBool:NO] forKey:rewardedVideoAd.placementID];
+    }
+    
+    if(self.delegatePerLoadingAd)
+    {
+        id<MPFacebookRouterDelegate> delegate = [self.delegatePerLoadingAd objectForKey:rewardedVideoAd.placementID];
+        if(delegate)
+        {
+            [delegate facebookDidFailWithError:error];
+        }
     }
 }
 
@@ -333,6 +357,7 @@
         {
             self.isAdClosed = NO;
             self.isRewardCallbackCalled = NO;
+            [self.displayedAd release];
             self.displayedAd = NULL;
             self.delegateForDisplayedAd = NULL;
             self.isAdPlaying = NO;
@@ -359,6 +384,7 @@
         {
             self.isAdClosed = NO;
             self.isRewardCallbackCalled = NO;
+            [self.displayedAd release];
             self.displayedAd = NULL;
             self.delegateForDisplayedAd = NULL;
             self.isAdPlaying = NO;
