@@ -61,7 +61,7 @@
 
             [ad setOpen:^{
                 MPLogInfo(@"AdColony zone %@ started", zoneId);
-                [weakSelf.delegate rewardedVideoWillAppearForCustomEvent:self];
+                [weakSelf.delegate rewardedVideoWillAppearForCustomEvent:weakSelf];
                 [weakSelf.delegate rewardedVideoDidAppearForCustomEvent:weakSelf];
             }];
             [ad setClose:^{
