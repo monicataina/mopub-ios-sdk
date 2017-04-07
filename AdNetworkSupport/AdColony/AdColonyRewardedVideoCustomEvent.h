@@ -2,8 +2,11 @@
 //  AdColonyRewardedVideoCustomEvent.h
 //  MoPubSDK
 //
-//  Copyright (c) 2015 MoPub. All rights reserved.
+//  Copyright (c) 2016 MoPub. All rights reserved.
 //
+
+#include "AdsManager_internal_config.h"
+#ifdef ADS_MANAGER_USE_ADCOLONY_VIA_MOPUB
 
 #if __has_include(<MoPub/MoPub.h>)
     #import <MoPub/MoPub.h>
@@ -12,12 +15,10 @@
 #endif
 
 /*
- * The AdColony SDK does not provide an ad clicked callback. As a result, this custom event will not invoke delegate methods
- * rewardedVideoDidReceiveTapEventForCustomEvent: and rewardedVideoWillLeaveApplicationForCustomEvent:
+ * Please reference the Supported Mediation Partner page at http://bit.ly/2mqsuFH for the
+ * latest version and ad format certifications.
  */
 @interface AdColonyRewardedVideoCustomEvent : MPRewardedVideoCustomEvent
 
-//add this setting to identify which provider triggers a callback
-+(void)setCustomEventIdentifier:(int)identifier;
-
 @end
+#endif //ADS_MANAGER_USE_ADCOLONY_VIA_MOPUB

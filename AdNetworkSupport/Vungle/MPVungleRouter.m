@@ -5,8 +5,9 @@
 //  Copyright (c) 2015 MoPub. All rights reserved.
 //
 
-#import "MoPub.h"
 #import "MPVungleRouter.h"
+#ifdef ADS_MANAGER_USE_VUNGLE_VIA_MOPUB
+
 #import "MPInstanceProvider+Vungle.h"
 #import "MPLogging.h"
 #import "VungleInstanceMediationSettings.h"
@@ -37,29 +38,29 @@ static const NSTimeInterval VungleInitTimeout = 2.0;
 
 + (MPVungleRouter *)sharedRouter
 {
-    return [MPVungleInstanceProvider sharedMPVungleRouterFrom:[MPInstanceProvider sharedProvider]];
+    return [[MPInstanceProvider sharedProvider] sharedMPVungleRouter];
 }
 
-- (void)requestInterstitialAdWithCustomEventInfo:(NSDictionary *)info delegate:(id<MPVungleRouterDelegate>)delegate logger:(id<VungleSDKLogger>) logger
+- (void)requestInterstitialAdWithCustomEventInfo:(NSDictionary *)info delegate:(id<MPVungleRouterDelegate>)delegate
 {
     if (!self.isAdPlaying) {
-        [self requestAdWithCustomEventInfo:info delegate:delegate logger:logger];
+        [self requestAdWithCustomEventInfo:info delegate:delegate];
     } else {
         [delegate vungleAdDidFailToLoad:nil];
     }
 }
 
-- (void)requestRewardedVideoAdWithCustomEventInfo:(NSDictionary *)info delegate:(id<MPVungleRouterDelegate>)delegate logger:(id<VungleSDKLogger>) logger
+- (void)requestRewardedVideoAdWithCustomEventInfo:(NSDictionary *)info delegate:(id<MPVungleRouterDelegate>)delegate
 {
     if (!self.isAdPlaying) {
-        [self requestAdWithCustomEventInfo:info delegate:delegate logger:logger];
+        [self requestAdWithCustomEventInfo:info delegate:delegate];
     } else {
         NSError *error = [NSError errorWithDomain:MoPubRewardedVideoAdsSDKDomain code:MPRewardedVideoAdErrorUnknown userInfo:nil];
         [delegate vungleAdDidFailToLoad:error];
     }
 }
 
-- (void)requestAdWithCustomEventInfo:(NSDictionary *)info delegate:(id<MPVungleRouterDelegate>)delegate logger:(id<VungleSDKLogger>) logger
+- (void)requestAdWithCustomEventInfo:(NSDictionary *)info delegate:(id<MPVungleRouterDelegate>)delegate
 {
     self.delegate = delegate;
 
@@ -75,15 +76,11 @@ static const NSTimeInterval VungleInitTimeout = 2.0;
         [[VungleSDK sharedSDK] performSelector:@selector(setPluginName:version:) withObject:@"mopub" withObject:VunglePluginVersion];
 #pragma clang diagnostic pop
 
-        [[VungleSDK sharedSDK] setLoggingEnabled:[[MoPub sharedInstance] m_enableDebugging]];
-        if(logger && [[MoPub sharedInstance] m_enableDebugging])
-        {
-            [[VungleSDK sharedSDK] attachLogger:logger];
-        }
-        
         [[VungleSDK sharedSDK] startWithAppId:appId];
         [[VungleSDK sharedSDK] setDelegate:self];
-
+        
+        MPLogInfo(@"Vungle SDK version: %@",VungleSDKVersion);
+        
         self.isWaitingForInit = YES;
         __weak MPVungleRouter *weakSelf = self;
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(VungleInitTimeout * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
@@ -134,10 +131,10 @@ static const NSTimeInterval VungleInitTimeout = 2.0;
         self.isAdPlaying = YES;
         NSDictionary *options;
 
-        if (customerId.length > 0) {
-            options = @{VunglePlayAdOptionKeyIncentivized : @(YES), VunglePlayAdOptionKeyUser : customerId};
-        } else if (settings && [settings.userIdentifier length]) {
+        if (settings && [settings.userIdentifier length]) {
             options = @{VunglePlayAdOptionKeyIncentivized : @(YES), VunglePlayAdOptionKeyUser : settings.userIdentifier};
+        } else if (customerId.length > 0) {
+            options = @{VunglePlayAdOptionKeyIncentivized : @(YES), VunglePlayAdOptionKeyUser : customerId};
         } else {
             options = @{VunglePlayAdOptionKeyIncentivized : @(YES)};
         }
@@ -193,14 +190,13 @@ static const NSTimeInterval VungleInitTimeout = 2.0;
         [self.delegate vungleAdShouldRewardUser];
     }
 
-    if (!willPresentProductSheet) {
-        [self vungleAdDidFinish];
-    }
-}
-
-- (void)vungleSDKwillCloseProductSheet:(id)productSheet
-{
     [self vungleAdDidFinish];
 }
 
+//deprecated
+- (void)vungleSDKwillCloseProductSheet:(id)productSheet
+{
+}
+
 @end
+#endif //ADS_MANAGER_USE_VUNGLE_VIA_MOPUB

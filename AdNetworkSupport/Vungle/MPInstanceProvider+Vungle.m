@@ -6,16 +6,19 @@
 //
 
 #import "MPInstanceProvider+Vungle.h"
+
+#ifdef ADS_MANAGER_USE_VUNGLE_VIA_MOPUB
 #import "MPVungleRouter.h"
 
-@implementation MPVungleInstanceProvider
+@implementation MPInstanceProvider (Vungle)
 
-+ (MPVungleRouter *)sharedMPVungleRouterFrom:(MPInstanceProvider *)provider
+- (MPVungleRouter *)sharedMPVungleRouter
 {
-    return [provider singletonForClass:[MPVungleRouter class]
+    return [self singletonForClass:[MPVungleRouter class]
                           provider:^id{
                               return [[MPVungleRouter alloc] init];
                           }];
 }
 
 @end
+#endif //ADS_MANAGER_USE_VUNGLE_VIA_MOPUB

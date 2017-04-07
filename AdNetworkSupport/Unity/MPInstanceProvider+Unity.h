@@ -5,13 +5,16 @@
 //  Copyright (c) 2016 MoPub. All rights reserved.
 //
 
+#include "AdsManager_internal_config.h"
+#ifdef ADS_MANAGER_USE_UNITY_VIA_MOPUB
+
 #import "MPInstanceProvider.h"
 
 @class MPUnityRouter;
 
-//use a MoPub's class instead of a category so that I can force to initialize it even without -ObjC flag
-@interface MPUnityInstanceProvider : NSObject
+@interface MPInstanceProvider (Unity)
 
-+ (MPUnityRouter *)sharedMPUnityRouterFrom:(MPInstanceProvider *)provider;
+- (MPUnityRouter *)sharedMPUnityRouter;
 
 @end
+#endif //ADS_MANAGER_USE_UNITY_VIA_MOPUB

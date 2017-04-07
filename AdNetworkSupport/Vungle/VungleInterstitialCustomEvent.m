@@ -5,6 +5,9 @@
 //  Copyright (c) 2013 MoPub. All rights reserved.
 //
 
+#include "AdsManager_internal_config.h"
+#ifdef ADS_MANAGER_USE_VUNGLE_VIA_MOPUB
+
 #import <VungleSDK/VungleSDK.h>
 #import "VungleInterstitialCustomEvent.h"
 #import "MPInstanceProvider.h"
@@ -32,9 +35,7 @@
 - (void)requestInterstitialWithCustomEventInfo:(NSDictionary *)info
 {
     self.handledAdAvailable = NO;
-    
-    //TODO: retrieve the logger from mediation settings
-    [[MPVungleRouter sharedRouter] requestInterstitialAdWithCustomEventInfo:info delegate:self logger:nil];
+    [[MPVungleRouter sharedRouter] requestInterstitialAdWithCustomEventInfo:info delegate:self];
 }
 
 - (void)showInterstitialFromRootViewController:(UIViewController *)rootViewController
@@ -104,3 +105,4 @@
 }
 
 @end
+#endif //ADS_MANAGER_USE_VUNGLE_VIA_MOPUB

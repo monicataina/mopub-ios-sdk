@@ -6,14 +6,18 @@
 //
 
 #import "FacebookRewardedVideoCustomEvent.h"
+#ifdef ADS_MANAGER_USE_FACEBOOK_VIA_MOPUB
+
 #import "MPRewardedVideoReward.h"
 #import "MPRewardedVideoError.h"
 #import "MPLogging.h"
 #import "MoPub.h"
 #import "FacebookInstanceMediationSettings.h"
+#import "FacebookGlobalMediationSettings.h"
 #include <FBAudienceNetwork/FBAudienceNetwork.h>
 
 static NSString *const kFacebookAdsOptionZoneIdKey = @"zoneId";
+static NSString *const kFacebookAdsOptionPlacementIdKey = @"placementId";
 
 @interface FacebookRewardedVideoCustomEvent () <FBRewardedVideoAdDelegate>
 
@@ -37,24 +41,46 @@ static int sFacebookIdentifier = -1;
 
 - (void)requestRewardedVideoWithCustomEventInfo:(NSDictionary *)info
 {
+    FacebookGlobalMediationSettings *globalSettings = [[MoPub sharedInstance] globalMediationSettingsForClass:[FacebookGlobalMediationSettings class]];
+    
+    if(globalSettings.isCOPPA)
+    {
+        MPLogInfo(@"FAN ads are disabled because user is under 13 yo (COPPA)");
+        NSError *error = [NSError errorWithDomain:MoPubRewardedVideoAdsSDKDomain code:MPRewardedVideoAdErrorNoAdsAvailable userInfo:nil];
+        [self.delegate rewardedVideoDidFailToLoadAdForCustomEvent:self error:error];
+        return;
+    }
+    
     self.zoneId = [info objectForKey:kFacebookAdsOptionZoneIdKey];
+    if (self.zoneId == nil) {
+        self.zoneId = [info objectForKey:kFacebookAdsOptionPlacementIdKey];
+    }
+    if (self.zoneId == nil) {
+        MPLogInfo(@"Custom event class data did not contain placementId.");
+        NSError *error = [NSError errorWithDomain:MoPubRewardedVideoAdsSDKDomain code:MPRewardedVideoAdErrorInvalidCustomEvent userInfo:@{NSLocalizedDescriptionKey: @"Custom event class data did not contain placementId.", NSLocalizedRecoverySuggestionErrorKey: @"Update your MoPub custom event class data to contain a valid FAN Ads placementId."}];
+        [self.delegate rewardedVideoDidFailToLoadAdForCustomEvent:self error:error];
+        return;
+    }
     
     FacebookInstanceMediationSettings *settings = [self.delegate instanceMediationSettingsForClass:[FacebookInstanceMediationSettings class]];
-    NSString *customerId = [self.delegate customerIdForRewardedVideoCustomEvent:self];
+   // NSString *customerId = [self.delegate customerIdForRewardedVideoCustomEvent:self];
     
     static dispatch_once_t facebookInitToken;
     dispatch_once(&facebookInitToken, ^{
-        if([[MoPub sharedInstance] m_enableDebugging])
+        if(globalSettings.useTestDevice == YES)
         {
             //set the current device as test device for FAN ads
             [FBAdSettings addTestDevice:[FBAdSettings testDeviceHash]];
         }
+    #ifdef FB_AD_SDK_VERSION
+        MPLogInfo(@"FAN SDK version: %@",FB_AD_SDK_VERSION);
+    #endif //FB_AD_SDK_VERSION
     });
 
     NSString* userId = NULL;
-    if (customerId.length >0) {
-        userId = customerId;
-    } else if (settings.userIdentifier.length > 0) {
+  //  if (customerId.length >0) {
+  //      userId = customerId;
+  /*  } else*/ if (settings.userIdentifier.length > 0) {
         userId = settings.userIdentifier;
     }
     
@@ -79,6 +105,13 @@ static int sFacebookIdentifier = -1;
 
 - (BOOL)hasAdAvailable
 {
+    FacebookGlobalMediationSettings *globalSettings = [[MoPub sharedInstance] globalMediationSettingsForClass:[FacebookGlobalMediationSettings class]];
+    if(globalSettings.isCOPPA)
+    {
+        MPLogInfo(@"FAN ads are disabled because user is under 13 yo (COPPA)");
+        return NO;
+    }
+    
     if(!self.loadingAd)
     {
         return NO;
@@ -130,18 +163,11 @@ static int sFacebookIdentifier = -1;
  */
 - (void)rewardedVideoAdComplete:(FBRewardedVideoAd *)rewardedVideoAd
 {
-}
-
-/*!
- @method
- 
- @abstract
- Sent if server call to publisher's reward endpoint returned HTTP status code 200.
- 
- @param rewardedVideoAd An FBRewardedVideoAd object sending the message.
- */
-- (void)rewardedVideoAdServerSuccess:(FBRewardedVideoAd *)rewardedVideoAd
-{
+    if(rewardedVideoAd)
+    {
+        MPLogInfo(@"FAN rewardedVideoAdComplete for %@",rewardedVideoAd.placementID);
+    }
+    
     self.isRewardCallbackCalled = YES;
     if(self.displayedAd && self.displayedAd == rewardedVideoAd)
     {
@@ -170,6 +196,22 @@ static int sFacebookIdentifier = -1;
  @method
  
  @abstract
+ Sent if server call to publisher's reward endpoint returned HTTP status code 200.
+ 
+ @param rewardedVideoAd An FBRewardedVideoAd object sending the message.
+ */
+- (void)rewardedVideoAdServerSuccess:(FBRewardedVideoAd *)rewardedVideoAd
+{
+    if(rewardedVideoAd)
+    {
+        MPLogInfo(@"FAN rewardedVideoAdServerSuccess for %@",rewardedVideoAd.placementID);
+    }
+}
+
+/*!
+ @method
+ 
+ @abstract
  Sent if server call to publisher's reward endpoint did not return HTTP status code 200
  or if the endpoint timed out.
  
@@ -177,27 +219,9 @@ static int sFacebookIdentifier = -1;
  */
 - (void)rewardedVideoAdServerFailed:(FBRewardedVideoAd *)rewardedVideoAd
 {
-    self.isRewardCallbackCalled = YES;
-    if(self.displayedAd && self.displayedAd == rewardedVideoAd)
+    if(rewardedVideoAd)
     {
-        MPRewardedVideoReward *reward = [[MPRewardedVideoReward alloc] initWithCurrencyType:self.rewardCurrencyForDisplayedAd amount:self.rewardAmountForDisplayedAd];
-        
-        if(self.isAdClosed == YES)
-        {
-            self.isAdClosed = NO;
-            self.isRewardCallbackCalled = NO;
-            self.displayedAd = NULL;
-        }
-        [self.delegate rewardedVideoFailedToRewardUserForCustomEvent:self reward:reward];
-    }
-    else
-    {
-        //add this code for FAN bug : this callback is called by all loaded ads. It should be called only by the displayed ad
-        if(self.loadingAd == rewardedVideoAd)
-        {
-            //set other as expired so that MoPub will load them again on the next loadAd call
-            [self.delegate rewardedVideoDidExpireForCustomEvent:self];
-        }
+        MPLogInfo(@"FAN rewardedVideoAdServerFailed for %@",rewardedVideoAd.placementID);
     }
 }
 
@@ -302,10 +326,12 @@ static int sFacebookIdentifier = -1;
  */
 - (void)rewardedVideoAd:(FBRewardedVideoAd *)rewardedVideoAd didFailWithError:(NSError *)error
 {
-    if(self.loadingAd && self.displayedAd == rewardedVideoAd)
+    if(self.loadingAd && self.loadingAd == rewardedVideoAd)
     {
+        self.loadingAd = NULL;
         [self.delegate rewardedVideoDidFailToLoadAdForCustomEvent:self error:error];
     }
 }
 
 @end
+#endif //ADS_MANAGER_USE_FACEBOOK_VIA_MOPUB

@@ -5,6 +5,9 @@
 //  Copyright (c) 2016 MoPub. All rights reserved.
 //
 
+#include "AdsManager_internal_config.h"
+#ifdef ADS_MANAGER_USE_FACEBOOK_VIA_MOPUB
+
 #if __has_include(<MoPub/MoPub.h>)
     #import <MoPub/MoPub.h>
 #else
@@ -20,3 +23,4 @@
 +(void)setCustomEventIdentifier:(int)identifier;
 
 @end
+#endif //ADS_MANAGER_USE_FACEBOOK_VIA_MOPUB

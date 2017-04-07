@@ -6,27 +6,20 @@
 //
 
 #import "VungleRewardedVideoCustomEvent.h"
+#ifdef ADS_MANAGER_USE_VUNGLE_VIA_MOPUB
+
 #import "MPLogging.h"
 #import <VungleSDK/VungleSDK.h>
 #import "MPRewardedVideoReward.h"
 #import "MPVungleRouter.h"
 #import "MPRewardedVideoError.h"
 #import "VungleInstanceMediationSettings.h"
-#import "MPInstanceProvider+Vungle.h"
-
-static int sVungleIdentifier = -1;
 
 @interface VungleRewardedVideoCustomEvent ()  <MPVungleRouterDelegate>
 
 @end
 
 @implementation VungleRewardedVideoCustomEvent
-
-+(void)initialize
-{
-    //force loading this class without -ObjC flag
-    [MPVungleInstanceProvider initialize];
-}
 
 - (void)dealloc
 {
@@ -35,10 +28,7 @@ static int sVungleIdentifier = -1;
 
 - (void)requestRewardedVideoWithCustomEventInfo:(NSDictionary *)info
 {
-    VungleInstanceMediationSettings *settings = [self.delegate instanceMediationSettingsForClass:[VungleInstanceMediationSettings class]];
-    id<VungleSDKLogger> logger = settings.logger;
-    
-    [[MPVungleRouter sharedRouter] requestRewardedVideoAdWithCustomEventInfo:info delegate:self logger:logger];
+    [[MPVungleRouter sharedRouter] requestRewardedVideoAdWithCustomEventInfo:info delegate:self];
 }
 
 - (BOOL)hasAdAvailable
@@ -68,16 +58,6 @@ static int sVungleIdentifier = -1;
 - (void)handleAdPlayedForCustomEventNetwork
 {
     //empty implementation
-}
-
-+ (void)setCustomEventIdentifier:(int)identifier
-{
-    sVungleIdentifier = identifier;
-}
-
-+ (int)getCustomEventIdentifier
-{
-    return sVungleIdentifier;
 }
 
 #pragma mark - MPVungleDelegate
@@ -119,3 +99,4 @@ static int sVungleIdentifier = -1;
 }
 
 @end
+#endif //ADS_MANAGER_USE_VUNGLE_VIA_MOPUB

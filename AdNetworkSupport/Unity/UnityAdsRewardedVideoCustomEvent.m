@@ -1,23 +1,22 @@
 //
-//  UnityAdsRewardedVideoCustomEvent.h
+//  UnityAdsRewardedVideoCustomEvent.m
 //  MoPubSDK
 //
 //  Copyright (c) 2016 MoPub. All rights reserved.
 //
 
 #import "UnityAdsRewardedVideoCustomEvent.h"
+#ifdef ADS_MANAGER_USE_UNITY_VIA_MOPUB
+
 #import "MPUnityRouter.h"
 #import "MPRewardedVideoReward.h"
 #import "MPRewardedVideoError.h"
 #import "MPLogging.h"
 #import "UnityAdsInstanceMediationSettings.h"
-#import "MPInstanceProvider+Unity.h"
 
 static NSString *const kMPUnityRewardedVideoGameId = @"gameId";
 static NSString *const kUnityAdsOptionPlacementIdKey = @"placementId";
 static NSString *const kUnityAdsOptionZoneIdKey = @"zoneId";
-
-static int sUnityIdentifier = -1;
 
 @interface UnityAdsRewardedVideoCustomEvent () <MPUnityRouterDelegate>
 
@@ -26,12 +25,6 @@ static int sUnityIdentifier = -1;
 @end
 
 @implementation UnityAdsRewardedVideoCustomEvent
-
-+(void)initialize
-{
-    //force loading this class without -ObjC flag
-    [MPUnityInstanceProvider initialize];
-}
 
 - (void)dealloc
 {
@@ -56,7 +49,8 @@ static int sUnityIdentifier = -1;
         return;
     }
     
-    [[MPUnityRouter sharedRouter] requestVideoAdWithGameId:gameId placementId:self.placementId delegate:self];
+    UnityAdsInstanceMediationSettings *settings = [self.delegate instanceMediationSettingsForClass:[UnityAdsInstanceMediationSettings class]];
+    [[MPUnityRouter sharedRouter] requestVideoAdWithGameId:gameId placementId:self.placementId settings:settings delegate:self];
 }
 
 - (BOOL)hasAdAvailable
@@ -91,16 +85,6 @@ static int sUnityIdentifier = -1;
     if (![self hasAdAvailable]) {
         [self.delegate rewardedVideoDidExpireForCustomEvent:self];
     }}
-
-+ (void)setCustomEventIdentifier:(int)identifier
-{
-    sUnityIdentifier = identifier;
-}
-
-+ (int)getCustomEventIdentifier
-{
-    return sUnityIdentifier;
-}
 
 #pragma mark - MPUnityRouterDelegate
 
@@ -162,18 +146,32 @@ static int sUnityIdentifier = -1;
 
 - (void) unityAdsDidStart:(NSString *)placementId
 {
-    [self.delegate rewardedVideoWillAppearForCustomEvent:self];
-    [self.delegate rewardedVideoDidAppearForCustomEvent:self];
+    if([self.placementId isEqualToString:placementId])
+    {
+        [self.delegate rewardedVideoWillAppearForCustomEvent:self];
+        [self.delegate rewardedVideoDidAppearForCustomEvent:self];
+    }
 }
 
 - (void) unityAdsDidFinish:(NSString *)placementId withFinishState:(UnityAdsFinishState)state
 {
-    if (state == kUnityAdsFinishStateCompleted) {
-        MPRewardedVideoReward *reward = [[MPRewardedVideoReward alloc] initWithCurrencyType:kMPRewardedVideoRewardCurrencyTypeUnspecified amount:@(kMPRewardedVideoRewardCurrencyAmountUnspecified)];
-        [self.delegate rewardedVideoShouldRewardUserForCustomEvent:self reward:reward];
+    if([self.placementId isEqualToString:placementId])
+    {
+        if (state == kUnityAdsFinishStateCompleted) {
+            MPRewardedVideoReward *reward = [[MPRewardedVideoReward alloc] initWithCurrencyType:kMPRewardedVideoRewardCurrencyTypeUnspecified amount:@(kMPRewardedVideoRewardCurrencyAmountUnspecified)];
+            [self.delegate rewardedVideoShouldRewardUserForCustomEvent:self reward:reward];
+        }
+        [self.delegate rewardedVideoWillDisappearForCustomEvent:self];
+        [self.delegate rewardedVideoDidDisappearForCustomEvent:self];
     }
-    [self.delegate rewardedVideoWillDisappearForCustomEvent:self];
-    [self.delegate rewardedVideoDidDisappearForCustomEvent:self];
+}
+
+- (void) unityAdsDidClick:(NSString *)placementId
+{
+    if([self.placementId isEqualToString:placementId])
+    {
+        [self.delegate rewardedVideoDidReceiveTapEventForCustomEvent:self];
+    }
 }
 
 - (void)unityAdsDidFailWithError:(NSError *)error
@@ -182,3 +180,4 @@ static int sUnityIdentifier = -1;
 }
 
 @end
+#endif //ADS_MANAGER_USE_UNITY_VIA_MOPUB

@@ -5,6 +5,9 @@
 //  Copyright (c) 2015 MoPub. All rights reserved.
 //
 
+#include "AdsManager_internal_config.h"
+#ifdef ADS_MANAGER_USE_FACEBOOK_VIA_MOPUB
+
 #import <Foundation/Foundation.h>
 
 #if __has_include(<MoPub/MoPub.h>)
@@ -31,3 +34,4 @@
 @property (nonatomic) NSInteger rewardAmount;
 
 @end
+#endif //ADS_MANAGER_USE_FACEBOOK_VIA_MOPUB

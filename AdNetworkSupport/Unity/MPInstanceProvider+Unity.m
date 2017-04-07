@@ -6,16 +6,20 @@
 //
 
 #import "MPInstanceProvider+Unity.h"
+
+#ifdef ADS_MANAGER_USE_UNITY_VIA_MOPUB
+
 #import "MPUnityRouter.h"
 
-@implementation MPUnityInstanceProvider
+@implementation MPInstanceProvider (Unity)
 
-+ (MPUnityRouter *)sharedMPUnityRouterFrom:(MPInstanceProvider *)provider
+- (MPUnityRouter *)sharedMPUnityRouter
 {
-    return [provider singletonForClass:[MPUnityRouter class]
+    return [self singletonForClass:[MPUnityRouter class]
                           provider:^id{
                               return [[MPUnityRouter alloc] init];
                           }];
 }
 
 @end
+#endif //ADS_MANAGER_USE_UNITY_VIA_MOPUB

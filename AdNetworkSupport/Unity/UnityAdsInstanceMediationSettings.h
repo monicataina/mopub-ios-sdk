@@ -5,6 +5,9 @@
 //  Copyright (c) 2015 MoPub. All rights reserved.
 //
 
+#include "AdsManager_internal_config.h"
+#ifdef ADS_MANAGER_USE_UNITY_VIA_MOPUB
+
 #import <Foundation/Foundation.h>
 
 #if __has_include(<MoPub/MoPub.h>)
@@ -26,4 +29,8 @@
  */
 @property (nonatomic, copy) NSString *userIdentifier;
 
+//by default is NO. If it set to YES, you will get Unity test ads
+@property (nonatomic) BOOL useTestDevice;
+
 @end
+#endif //ADS_MANAGER_USE_UNITY_VIA_MOPUB

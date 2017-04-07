@@ -5,6 +5,9 @@
 //  Copyright (c) 2016 MoPub. All rights reserved.
 //
 
+#include "AdsManager_internal_config.h"
+#ifdef ADS_MANAGER_USE_UNITY_VIA_MOPUB
+
 #import "MoPub.h"
 #import "MPUnityRouter.h"
 #import "UnityAdsInstanceMediationSettings.h"
@@ -26,18 +29,18 @@
 
 + (MPUnityRouter *)sharedRouter
 {
-    return [MPUnityInstanceProvider sharedMPUnityRouterFrom:[MPInstanceProvider sharedProvider]];
+    return [[MPInstanceProvider sharedProvider] sharedMPUnityRouter];
 }
 
 - (MPUnityRouter *)init
 {
     self = [super init];
     self.m_playerMetaData = [[UADSPlayerMetaData alloc] init];
-    
+   
     return self;
 }
 
-- (void)requestVideoAdWithGameId:(NSString *)gameId placementId:(NSString *)placementId delegate:(id<MPUnityRouterDelegate>)delegate;
+- (void)requestVideoAdWithGameId:(NSString *)gameId placementId:(NSString *)placementId settings:(UnityAdsInstanceMediationSettings *)settings delegate:(id<MPUnityRouterDelegate>)delegate;
 {
     if(SYSTEM_VERSION_LESS_THAN(@"7.0"))
     {
@@ -56,15 +59,22 @@
                 [mediationMetaData setName:@"MoPub"];
                 [mediationMetaData setVersion:[[MoPub sharedInstance] version]];
                 [mediationMetaData commit];
-                
-                [UnityAds setDebugMode:[[MoPub sharedInstance] m_enableDebugging]];
-                
-                [UnityAds initialize:gameId delegate:self];
+                if([UnityAds isInitialized])
+                {
+                    //update Unity
+                    //note that gameId and testMode won't be updated in this case. It will use the values set when app started
+                    [UnityAds setDelegate:self];
+                }
+                else
+                {
+                    //initialize Unity for the first time
+                    [UnityAds initialize:gameId delegate:self testMode:settings.useTestDevice];
+                }
             });
 
             // Need to check immediately as an ad may be cached.
             if ([self isAdAvailableForPlacementId:placementId]) {
-                [self.delegate unityAdsReady:placementId];
+                    [self.delegate unityAdsReady:placementId];
             }
             // MoPub timeout will handle the case for an ad failing to load.
         } else {
@@ -86,27 +96,24 @@
         //unity crashes on ios less than 7, so won't try to show an ad on iOS6
         NSError *error = [NSError errorWithDomain:MoPubRewardedVideoAdsSDKDomain code:MPRewardedVideoAdErrorUnknown userInfo:nil];
         [delegate unityAdsDidFailWithError:error];
+	return;
     }
-    else
-    {
-        if (!self.isAdPlaying && [self isAdAvailableForPlacementId:placementId]) {
-            self.isAdPlaying = YES;
+    if (!self.isAdPlaying && [self isAdAvailableForPlacementId:placementId]) {
+        self.isAdPlaying = YES;
 
-            self.delegate = delegate;
-            
-            if (customerId.length >0) {
-                [self.m_playerMetaData setServerId:customerId];
-                [self.m_playerMetaData commit];
-            } else if (settings.userIdentifier.length > 0) {
-                [self.m_playerMetaData setServerId:settings.userIdentifier];
-                [self.m_playerMetaData commit];
-            }
+        self.delegate = delegate;
+        if (settings.userIdentifier.length > 0) {
+            [self.m_playerMetaData setServerId:settings.userIdentifier];
+            [self.m_playerMetaData commit];
+        } else if (customerId.length > 0) {
+            [self.m_playerMetaData setServerId:customerId];
+            [self.m_playerMetaData commit];
+        } 
 
-            [UnityAds show:viewController placementId:placementId];
-        } else {
-            NSError *error = [NSError errorWithDomain:MoPubRewardedVideoAdsSDKDomain code:MPRewardedVideoAdErrorUnknown userInfo:nil];
-            [delegate unityAdsDidFailWithError:error];
-        }
+        [UnityAds show:viewController placementId:placementId];
+    } else {
+        NSError *error = [NSError errorWithDomain:MoPubRewardedVideoAdsSDKDomain code:MPRewardedVideoAdErrorUnknown userInfo:nil];
+        [delegate unityAdsDidFailWithError:error];
     }
 }
 
@@ -118,7 +125,7 @@
     }
 }
 
-#pragma mark - UnityAdsDelegate
+#pragma mark - UnityAdsExtendedDelegate
 
 - (void)unityAdsReady:(NSString *)placementId
 {
@@ -134,8 +141,14 @@
 }
 
 - (void)unityAdsDidFinish:(NSString *)placementId withFinishState:(UnityAdsFinishState)state {
-    [self.delegate unityAdsDidFinish:placementId withFinishState:state];
     self.isAdPlaying = NO;
+    [self.delegate unityAdsDidFinish:placementId withFinishState:state];
+}
+
+- (void)unityAdsDidClick:(NSString *)placementId
+{
+    [self.delegate unityAdsDidClick:placementId];
 }
 
 @end
+#endif //ADS_MANAGER_USE_UNITY_VIA_MOPUB

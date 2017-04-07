@@ -5,13 +5,16 @@
 //  Copyright (c) 2015 MoPub. All rights reserved.
 //
 
+#include "AdsManager_internal_config.h"
+#ifdef ADS_MANAGER_USE_VUNGLE_VIA_MOPUB
+
 #import "MPInstanceProvider.h"
 
 @class MPVungleRouter;
 
-//use a MoPub's class instead of a category so that I can force to initialize it even without -ObjC flag
-@interface MPVungleInstanceProvider : NSObject
+@interface MPInstanceProvider (Vungle)
 
-+ (MPVungleRouter *)sharedMPVungleRouterFrom:(MPInstanceProvider *)provider;
+- (MPVungleRouter *)sharedMPVungleRouter;
 
 @end
+#endif //ADS_MANAGER_USE_VUNGLE_VIA_MOPUB

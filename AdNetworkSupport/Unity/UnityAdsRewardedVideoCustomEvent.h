@@ -5,6 +5,9 @@
 //  Copyright (c) 2016 MoPub. All rights reserved.
 //
 
+#include "AdsManager_internal_config.h"
+#ifdef ADS_MANAGER_USE_UNITY_VIA_MOPUB
+
 #if __has_include(<MoPub/MoPub.h>)
     #import <MoPub/MoPub.h>
 #else
@@ -12,11 +15,10 @@
 #endif
 
 /*
- * unCertified with version 2.0.5 of the Unity SDK.
+ * Please reference the Supported Mediation Partner page at http://bit.ly/2mqsuFH for the
+ * latest version and ad format certifications.
  */
-
 @interface UnityAdsRewardedVideoCustomEvent : MPRewardedVideoCustomEvent
 
-+(void)setCustomEventIdentifier:(int)identifier;
-
 @end
+#endif //ADS_MANAGER_USE_UNITY_VIA_MOPUB

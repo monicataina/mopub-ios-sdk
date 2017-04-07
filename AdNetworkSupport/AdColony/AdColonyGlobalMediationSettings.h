@@ -2,8 +2,11 @@
 //  AdColonyGlobalMediationSettings.h
 //  MoPubSDK
 //
-//  Copyright (c) 2015 MoPub. All rights reserved.
+//  Copyright (c) 2016 MoPub. All rights reserved.
 //
+
+#include "AdsManager_internal_config.h"
+#ifdef ADS_MANAGER_USE_ADCOLONY_VIA_MOPUB
 
 #import <Foundation/Foundation.h>
 
@@ -13,10 +16,12 @@
     #import "MPMediationSettingsProtocol.h"
 #endif
 
+#import <AdColony/AdColony.h>
+
 /*
  * `AdColonyGlobalMediationSettings` allows the application to provide constant global properties
- * to configure aspects of Ad Colony. See `MPMediationSettingsProtocol` to see how mediation settings
- * are used.
+ * to configure aspects of AdColony. See `MPMediationSettingsProtocol` to see how mediation settings
+ * are used. This only apply to AdColonyRewardedVideoCustomEvents.
  */
 @interface AdColonyGlobalMediationSettings : NSObject <MPMediationSettingsProtocol>
 
@@ -26,3 +31,4 @@
 @property (nonatomic, copy) NSString *customId;
 
 @end
+#endif //ADS_MANAGER_USE_ADCOLONY_VIA_MOPUB

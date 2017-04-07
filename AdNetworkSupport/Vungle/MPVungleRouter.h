@@ -5,6 +5,9 @@
 //  Copyright (c) 2015 MoPub. All rights reserved.
 //
 
+#include "AdsManager_internal_config.h"
+#ifdef ADS_MANAGER_USE_VUNGLE_VIA_MOPUB
+
 #import <Foundation/Foundation.h>
 #import <VungleSDK/VungleSDK.h>
 
@@ -19,8 +22,8 @@
 
 + (MPVungleRouter *)sharedRouter;
 
-- (void)requestInterstitialAdWithCustomEventInfo:(NSDictionary *)info delegate:(id<MPVungleRouterDelegate>)delegate logger:(id<VungleSDKLogger>) logger;
-- (void)requestRewardedVideoAdWithCustomEventInfo:(NSDictionary *)info delegate:(id<MPVungleRouterDelegate>)delegate logger:(id<VungleSDKLogger>) logger;
+- (void)requestInterstitialAdWithCustomEventInfo:(NSDictionary *)info delegate:(id<MPVungleRouterDelegate>)delegate;
+- (void)requestRewardedVideoAdWithCustomEventInfo:(NSDictionary *)info delegate:(id<MPVungleRouterDelegate>)delegate;
 - (BOOL)isAdAvailable;
 - (void)presentInterstitialAdFromViewController:(UIViewController *)viewController withDelegate:(id<MPVungleRouterDelegate>)delegate;
 - (void)presentRewardedVideoAdFromViewController:(UIViewController *)viewController customerId:(NSString *)customerId settings:(VungleInstanceMediationSettings *)settings delegate:(id<MPVungleRouterDelegate>)delegate;
@@ -41,3 +44,4 @@
 - (void)vungleAdShouldRewardUser;
 
 @end
+#endif //ADS_MANAGER_USE_VUNGLE_VIA_MOPUB
