@@ -11,7 +11,6 @@
 @class MPRewardedVideoReward;
 @class CLLocation;
 @protocol MPRewardedVideoAdManagerDelegate;
-@protocol MPRewardedVideoDelegate;
 
 /**
  * `MPRewardedVideoAdManager` represents a rewarded video for a single ad unit ID. This is the object that
@@ -20,23 +19,27 @@
 @interface MPRewardedVideoAdManager : NSObject
 
 @property (nonatomic, weak) id<MPRewardedVideoAdManagerDelegate> delegate;
-@property (nonatomic, weak) id<MPRewardedVideoDelegate> rewardDelegate;
 @property (nonatomic, readonly) NSString *adUnitID;
 @property (nonatomic, strong) NSArray *mediationSettings;
 @property (nonatomic, copy) NSString *customerId;
 
-- (instancetype)initWithAdUnitID:(NSString *)adUnitID delegate:(id<MPRewardedVideoAdManagerDelegate>)delegate rewardDelegate:(id<MPRewardedVideoDelegate>)rewardDelegate;
+/**
+ * An array of rewards that are available for the rewarded ad that can be selected when presenting the ad.
+ */
+@property (nonatomic, readonly) NSArray *availableRewards;
+
+/**
+ * The currently selected reward that will be awarded to the user upon completion of the ad. By default,
+ * this corresponds to the first reward in `availableRewards`.
+ */
+@property (nonatomic, readonly) MPRewardedVideoReward *selectedReward;
+
+- (instancetype)initWithAdUnitID:(NSString *)adUnitID delegate:(id<MPRewardedVideoAdManagerDelegate>)delegate;
 
 /**
  * Returns the custom event class type.
  */
 - (Class)customEventClass;
-
-/**
- * Called to retrieve the current customEvent identifier. By default it's -1
- *
- */
-- (int)getCustomEventIdentifier;
 
 /**
  * Loads a rewarded video ad with the ad manager's ad unit ID.
@@ -60,11 +63,21 @@
 - (BOOL)hasAdAvailable;
 
 /**
- * Plays a rewarded video ad.
+ * Plays a rewarded video ad, choosing the first reward from `availableRewards` to award the user.
  *
  * @param viewController Presents the rewarded video ad from viewController.
  */
-- (void)presentRewardedVideoAdFromViewController:(UIViewController *)viewController;
+- (void)presentRewardedVideoAdFromViewController:(UIViewController *)viewController __deprecated_msg("use presentRewardedVideoAdFromViewController:withReward: instead.");
+
+/**
+ * Plays a rewarded video ad.
+ *
+ * @param viewController Presents the rewarded video ad from viewController.
+ * @param reward A reward chosen from `availableRewards` to award the user upon completion.
+ * This value should not be `nil`. If the reward that is passed in did not come from `availableRewards`,
+ * this method will not present the rewarded ad and invoke `rewardedVideoDidFailToPlayForAdManager:error:`.
+ */
+- (void)presentRewardedVideoAdFromViewController:(UIViewController *)viewController withReward:(MPRewardedVideoReward *)reward;
 
 /**
  * This method is called when another ad unit has played a rewarded video from the same network this ad manager's custom event
@@ -87,6 +100,5 @@
 - (void)rewardedVideoDidReceiveTapEventForAdManager:(MPRewardedVideoAdManager *)manager;
 - (void)rewardedVideoWillLeaveApplicationForAdManager:(MPRewardedVideoAdManager *)manager;
 - (void)rewardedVideoShouldRewardUserForAdManager:(MPRewardedVideoAdManager *)manager reward:(MPRewardedVideoReward *)reward;
-- (void)rewardedVideoFailedToRewardUserForAdManager:(MPRewardedVideoAdManager *)manager reward:(MPRewardedVideoReward *)reward;
 
 @end

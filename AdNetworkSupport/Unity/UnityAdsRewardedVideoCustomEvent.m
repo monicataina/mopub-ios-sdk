@@ -90,7 +90,10 @@ static NSString *const kUnityAdsOptionZoneIdKey = @"zoneId";
 
 - (void)unityAdsReady:(NSString *)placementId
 {
-    [self.delegate rewardedVideoDidLoadAdForCustomEvent:self];
+    if([self.placementId isEqualToString:placementId])
+    {
+        [self.delegate rewardedVideoDidLoadAdForCustomEvent:self];
+    }
 }
 
 - (void)unityAdsDidError:(UnityAdsError)error withMessage:(NSString *)message

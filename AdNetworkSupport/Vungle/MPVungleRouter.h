@@ -16,7 +16,8 @@
 
 @interface MPVungleRouter : NSObject <VungleSDKDelegate>
 
-@property (nonatomic, weak) id<MPVungleRouterDelegate> delegate;
+@property (nonatomic, strong) id<MPVungleRouterDelegate> m_showDelegate;
+@property (nonatomic, strong) NSMutableArray* m_loadDelegates;
 
 + (void)setAppId:(NSString *)appId;
 
@@ -28,6 +29,9 @@
 - (void)presentInterstitialAdFromViewController:(UIViewController *)viewController withDelegate:(id<MPVungleRouterDelegate>)delegate;
 - (void)presentRewardedVideoAdFromViewController:(UIViewController *)viewController customerId:(NSString *)customerId settings:(VungleInstanceMediationSettings *)settings delegate:(id<MPVungleRouterDelegate>)delegate;
 - (void)clearDelegate:(id<MPVungleRouterDelegate>)delegate;
+
+- (void) vungleAdDidFailToLoad;
+- (void) vungleAdDidLoad;
 @end
 
 @protocol MPVungleRouterDelegate <NSObject>

@@ -41,7 +41,17 @@ static const NSTimeInterval VungleInitTimeout = 2.0;
     return [[MPInstanceProvider sharedProvider] sharedMPVungleRouter];
 }
 
-- (void)requestInterstitialAdWithCustomEventInfo:(NSDictionary *)info delegate:(id<MPVungleRouterDelegate>)delegate
+- (MPVungleRouter *)init
+{
+    self = [super init];
+    
+    self.m_showDelegate = NULL;
+    self.m_loadDelegates = [[NSMutableArray alloc] init];
+    
+    return self;
+}
+
+- (void)requestInterstitialAdWithCustomEventInfo:(NSDictionary *)info delegate:(id<MPVungleRouterDelegate>)delegate logger:(id<VungleSDKLogger>) logger
 {
     if (!self.isAdPlaying) {
         [self requestAdWithCustomEventInfo:info delegate:delegate];
@@ -62,8 +72,11 @@ static const NSTimeInterval VungleInitTimeout = 2.0;
 
 - (void)requestAdWithCustomEventInfo:(NSDictionary *)info delegate:(id<MPVungleRouterDelegate>)delegate
 {
-    self.delegate = delegate;
-
+    if(![self.m_loadDelegates containsObject:delegate])
+    {
+        [self.m_loadDelegates addObject:delegate];
+    }
+    
     static dispatch_once_t vungleInitToken;
     dispatch_once(&vungleInitToken, ^{
         NSString *appId = [info objectForKey:@"appId"];
@@ -88,7 +101,7 @@ static const NSTimeInterval VungleInitTimeout = 2.0;
             if (strongSelf) {
                 if (strongSelf.isWaitingForInit) {
                     strongSelf.isWaitingForInit = NO;
-                    [strongSelf.delegate vungleAdDidFailToLoad:nil];
+                    [strongSelf vungleAdDidFailToLoad];
                 }
             }
         });
@@ -96,9 +109,33 @@ static const NSTimeInterval VungleInitTimeout = 2.0;
 
     if (!self.isWaitingForInit) {
         if ([[VungleSDK sharedSDK] isAdPlayable]) {
-            [self.delegate vungleAdDidLoad];
+            [self vungleAdDidLoad];
         } else {
-            [self.delegate vungleAdDidFailToLoad:nil];
+            [self vungleAdDidFailToLoad];
+        }
+    }
+}
+
+- (void) vungleAdDidFailToLoad
+{
+    NSArray* loadDelegates = [[NSMutableArray alloc] initWithArray:self.m_loadDelegates];
+    for(id delegate in loadDelegates)
+    {
+        if(delegate != nil)
+        {
+            [delegate vungleAdDidFailToLoad:nil];
+        }
+    }
+}
+
+- (void) vungleAdDidLoad
+{
+    NSArray* loadDelegates = [[NSMutableArray alloc] initWithArray:self.m_loadDelegates];
+    for(id delegate in loadDelegates)
+    {
+        if(delegate != nil)
+        {
+            [delegate vungleAdDidLoad];
         }
     }
 }
@@ -111,7 +148,7 @@ static const NSTimeInterval VungleInitTimeout = 2.0;
 - (void)presentInterstitialAdFromViewController:(UIViewController *)viewController withDelegate:(id<MPVungleRouterDelegate>)delegate
 {
     if (!self.isAdPlaying && self.isAdAvailable) {
-        self.delegate = delegate;
+        self.m_showDelegate = delegate;
         self.isAdPlaying = YES;
 
         BOOL success = [[VungleSDK sharedSDK] playAd:viewController error:nil];
@@ -127,7 +164,7 @@ static const NSTimeInterval VungleInitTimeout = 2.0;
 - (void)presentRewardedVideoAdFromViewController:(UIViewController *)viewController customerId:(NSString *)customerId settings:(VungleInstanceMediationSettings *)settings delegate:(id<MPVungleRouterDelegate>)delegate
 {
     if (!self.isAdPlaying && self.isAdAvailable) {
-        self.delegate = delegate;
+        self.m_showDelegate = delegate;
         self.isAdPlaying = YES;
         NSDictionary *options;
 
@@ -142,6 +179,7 @@ static const NSTimeInterval VungleInitTimeout = 2.0;
         BOOL success = [[VungleSDK sharedSDK] playAd:viewController withOptions:options error:nil];
 
         if (!success) {
+            self.m_showDelegate = NULL;
             [delegate vungleAdDidFailToPlay:nil];
         }
     } else {
@@ -152,8 +190,12 @@ static const NSTimeInterval VungleInitTimeout = 2.0;
 
 - (void)clearDelegate:(id<MPVungleRouterDelegate>)delegate
 {
-    if (self.delegate == delegate) {
-        [self setDelegate:nil];
+    if (self.m_showDelegate == delegate) {
+        self.m_showDelegate = NULL;
+    }
+    if([self.m_loadDelegates containsObject:delegate])
+    {
+        [self.m_loadDelegates removeObject:delegate];
     }
 }
 
@@ -161,7 +203,7 @@ static const NSTimeInterval VungleInitTimeout = 2.0;
 
 - (void)vungleAdDidFinish
 {
-    [self.delegate vungleAdWillDisappear];
+    [self.m_showDelegate vungleAdWillDisappear];
     self.isAdPlaying = NO;
 }
 
@@ -171,26 +213,27 @@ static const NSTimeInterval VungleInitTimeout = 2.0;
 {
     if (self.isWaitingForInit && isAdPlayable) {
         self.isWaitingForInit = NO;
-        [self.delegate vungleAdDidLoad];
+        [self vungleAdDidLoad];
     }
 }
 
 - (void)vungleSDKwillShowAd
 {
-    [self.delegate vungleAdWillAppear];
+    [self.m_showDelegate vungleAdWillAppear];
 }
 
 - (void)vungleSDKwillCloseAdWithViewInfo:(NSDictionary *)viewInfo willPresentProductSheet:(BOOL)willPresentProductSheet
 {
     if ([viewInfo[kMPVungleAdUserDidDownloadKey] isEqual:@YES]) {
-        [self.delegate vungleAdWasTapped];
+        [self.m_showDelegate vungleAdWasTapped];
     }
 
     if ([[viewInfo objectForKey:kMPVungleRewardedAdCompletedView] boolValue] && [self.delegate respondsToSelector:@selector(vungleAdShouldRewardUser)]) {
-        [self.delegate vungleAdShouldRewardUser];
+        [self.m_showDelegate vungleAdShouldRewardUser];
     }
 
     [self vungleAdDidFinish];
+    self.m_showDelegate = NULL;
 }
 
 //deprecated

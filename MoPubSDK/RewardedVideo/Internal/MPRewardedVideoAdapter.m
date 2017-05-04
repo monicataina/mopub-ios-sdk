@@ -75,11 +75,6 @@ static const NSString *kRewardedVideoApiVersion = @"1";
     }
 }
 
-- (MPRewardedVideoCustomEvent*)getCustomEvent
-{
-    return _rewardedVideoCustomEvent;
-}
-
 - (BOOL)hasAdAvailable
 {
     return [self.rewardedVideoCustomEvent hasAdAvailable];
@@ -128,10 +123,15 @@ static const NSString *kRewardedVideoApiVersion = @"1";
     NSString *finalCompletionUrlString = self.configuration.rewardedVideoCompletionUrl;
     if ([self.delegate respondsToSelector:@selector(rewardedVideoCustomerId)] && [self.delegate rewardedVideoCustomerId].length > 0) {
         // self.configuration.rewardedVideoCompletionUrl is already url encoded. Only the customer_id added by the client needs url encoding.
-        NSString *urlEncodedCustomerId = [MPAdditions_NSString mp_URLEncodedString:[self.delegate rewardedVideoCustomerId]];
+        NSString *urlEncodedCustomerId = [[self.delegate rewardedVideoCustomerId] mp_URLEncodedString];
         finalCompletionUrlString = [NSString stringWithFormat:@"%@&customer_id=%@", finalCompletionUrlString, urlEncodedCustomerId];
     }
-    finalCompletionUrlString = [NSString stringWithFormat:@"%@&nv=%@&v=%@", finalCompletionUrlString, [MPAdditions_NSString mp_URLEncodedString:MP_SDK_VERSION], kRewardedVideoApiVersion];
+    finalCompletionUrlString = [NSString stringWithFormat:@"%@&nv=%@&v=%@", finalCompletionUrlString, [MP_SDK_VERSION mp_URLEncodedString], kRewardedVideoApiVersion];
+
+    if (self.configuration.selectedReward) {
+        finalCompletionUrlString = [NSString stringWithFormat:@"%@&rcn=%@&rca=%i", finalCompletionUrlString, [self.configuration.selectedReward.currencyType mp_URLEncodedString], [self.configuration.selectedReward.amount intValue]];
+    }
+
     return [NSURL URLWithString:finalCompletionUrlString];
 }
 
@@ -148,15 +148,6 @@ static const NSString *kRewardedVideoApiVersion = @"1";
 }
 
 #pragma mark - MPRewardedVideoCustomEventDelegate
-
--(int)getCustomEventIdentifierForClass:(Class)aClass
-{
-     if ([aClass respondsToSelector:@selector(getCustomEventIdentifier)])
-     {
-         return [aClass getCustomEventIdentifier];
-     }
-    return -1;
-}
 
 - (id<MPMediationSettingsProtocol>)instanceMediationSettingsForClass:(Class)aClass
 {
@@ -252,7 +243,7 @@ static const NSString *kRewardedVideoApiVersion = @"1";
     } else {
         // server to server not enabled. It uses client side rewarding.
         if (self.configuration) {
-            MPRewardedVideoReward *mopubConfiguredReward = self.configuration.rewardedVideoReward;
+            MPRewardedVideoReward *mopubConfiguredReward = self.configuration.selectedReward;
             // If reward is set in adConfig, use reward that's set in adConfig.
             // Currency type has to be defined in mopubConfiguredReward in order to use mopubConfiguredReward.
             if (mopubConfiguredReward && mopubConfiguredReward.currencyType != kMPRewardedVideoRewardCurrencyTypeUnspecified){
@@ -262,27 +253,6 @@ static const NSString *kRewardedVideoApiVersion = @"1";
 
         if (reward) {
             [self.delegate rewardedVideoShouldRewardUserForAdapter:self reward:reward];
-        }
-    }
-}
-- (void)rewardedVideoFailedToRewardUserForCustomEvent:(MPRewardedVideoCustomEvent *)customEvent reward:(MPRewardedVideoReward *)reward
-{
-    if (self.configuration && self.configuration.rewardedVideoCompletionUrl) {
-        // server to server callback
-        [[MPRewardedVideo sharedInstance] startRewardedVideoConnectionWithUrl:[self rewardedVideoCompletionUrlByAppendingClientParams]];
-    } else {
-        // server to server not enabled. It uses client side rewarding.
-        if (self.configuration) {
-            MPRewardedVideoReward *mopubConfiguredReward = self.configuration.rewardedVideoReward;
-            // If reward is set in adConfig, use reward that's set in adConfig.
-            // Currency type has to be defined in mopubConfiguredReward in order to use mopubConfiguredReward.
-            if (mopubConfiguredReward && mopubConfiguredReward.currencyType != kMPRewardedVideoRewardCurrencyTypeUnspecified){
-                reward = mopubConfiguredReward;
-            }
-        }
-        
-        if (reward) {
-            [self.delegate rewardedVideoFailedToRewardUserForAdapter:self reward:reward];
         }
     }
 }

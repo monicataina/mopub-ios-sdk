@@ -5,6 +5,7 @@
 //  Copyright (c) 2013 MoPub. All rights reserved.
 //
 
+#import <WebKit/WebKit.h>
 #import "MPURLResolver.h"
 #import "NSURL+MPAdditions.h"
 #import "NSHTTPURLResponse+MPAdditions.h"
@@ -121,10 +122,26 @@ static NSString * const kResolverErrorDomain = @"com.mopub.resolver";
         }
     } else if ([self safariURLForURL:URL]) {
         actionInfo = [MPURLActionInfo infoWithURL:self.originalURL safariDestinationURL:[NSURL URLWithString:[self safariURLForURL:URL]]];
-    } else if ([MPAdditions_NSURL mp_isMoPubShareSchemeForURL:URL]) {
+    } else if ([URL mp_isMoPubShareScheme]) {
         actionInfo = [MPURLActionInfo infoWithURL:self.originalURL shareURL:URL];
     } else if ([self URLShouldOpenInApplication:URL]) {
         actionInfo = [MPURLActionInfo infoWithURL:self.originalURL deeplinkURL:URL];
+    } else if ([URL.scheme isEqualToString:@"http"]) { // handle HTTP requests in particular to get around ATS settings
+        // As a note: `appTransportSecuritySettings` returns what makes sense for the iOS version. I.e., if the device
+        // is running iOS 8, this method will always return `MPATSSettingAllowsArbitraryLoads`. If the device is running
+        // iOS 9, this method will never give us `MPATSSettingAllowsArbitraryLoadsInWebContent`. As a result, we don't
+        // have to do OS checks here; we can just trust these settings.
+        MPATSSetting settings = [[MPCoreInstanceProvider sharedProvider] appTransportSecuritySettings];
+
+        if ((settings & MPATSSettingAllowsArbitraryLoads) != 0) { // opens as normal if ATS is disabled
+            // don't do anything
+        } else if ((settings & MPATSSettingAllowsArbitraryLoadsInWebContent) != 0) { // opens in WKWebView if ATS is disabled for arbitrary web content
+            actionInfo = [MPURLActionInfo infoWithURL:self.originalURL
+                                       webViewBaseURL:self.currentURL];
+        } else { // opens in Mobile Safari if no other option is available
+            actionInfo = [MPURLActionInfo infoWithURL:self.originalURL
+                                 safariDestinationURL:self.currentURL];
+        }
     }
 
     return actionInfo;
@@ -162,10 +179,10 @@ static NSString * const kResolverErrorDomain = @"com.mopub.resolver";
         if ([lastPathComponent hasPrefix:@"id"]) {
             itemIdentifier = [lastPathComponent substringFromIndex:2];
         } else {
-            itemIdentifier = [[MPAdditions_NSURL mp_queryAsDictionaryForURL:URL] objectForKey:@"id"];
+            itemIdentifier = [URL.mp_queryAsDictionary objectForKey:@"id"];
         }
     } else if ([URL.host hasSuffix:@"phobos.apple.com"]) {
-        itemIdentifier = [[MPAdditions_NSURL mp_queryAsDictionaryForURL:URL] objectForKey:@"id"];
+        itemIdentifier = [URL.mp_queryAsDictionary objectForKey:@"id"];
     }
 
     NSCharacterSet *nonIntegers = [[NSCharacterSet decimalDigitCharacterSet] invertedSet];
@@ -184,7 +201,7 @@ static NSString * const kResolverErrorDomain = @"com.mopub.resolver";
 
     if ([[URL scheme] isEqualToString:kMoPubSafariScheme] &&
         [[URL host] isEqualToString:kMoPubSafariNavigateHost]) {
-        safariURL = [[MPAdditions_NSURL mp_queryAsDictionaryForURL:URL] objectForKey:@"url"];
+        safariURL = [URL.mp_queryAsDictionary objectForKey:@"url"];
     }
 
     return safariURL;
@@ -251,7 +268,7 @@ static NSString * const kResolverErrorDomain = @"com.mopub.resolver";
 
     NSDictionary *headers = [httpResponse allHeaderFields];
     NSString *contentType = [headers objectForKey:kMoPubHTTPHeaderContentType];
-    self.responseEncoding = [MPAdditions_NSHTTPURLResponse stringEncodingFromContentType:contentType];
+    self.responseEncoding = [httpResponse stringEncodingFromContentType:contentType];
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection

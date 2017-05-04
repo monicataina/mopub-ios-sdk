@@ -33,7 +33,7 @@ static NSString * const kShareTweetMessageTemplate = @"Check out @%@'s Tweet: %@
 {
     self = [super init];
     if (self) {
-        NSDictionary *queryParamDict = [MPAdditions_NSURL mp_queryAsDictionaryForURL:URL];
+        NSDictionary *queryParamDict = [URL mp_queryAsDictionary];
         id screenName = [queryParamDict objectForKey:kShareTweetScreenName];
         id tweetId = [queryParamDict objectForKey:kShareTweetId];
 

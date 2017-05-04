@@ -122,14 +122,6 @@
  */
 - (void)handleCustomEventInvalidated;
 
-/*
- * Override this method to assign an identifier for it.
- *
- * Call this method to retrieve the custom event identifier for a class (which triggered an event)
- * Default value is -1
- */
-+ (int)getCustomEventIdentifier;
-
 @end
 
 @protocol MPRewardedVideoCustomEventDelegate <NSObject>
@@ -271,7 +263,6 @@
 
 /**
  * Call this method when the user should be rewarded for watching the rewarded video.
- * Sent if server call to publisher's reward endpoint returned HTTP status code 200.
  *
  * @param customEvent You should pass `self` to allow the MoPub SDK to associate this event with the correct
  * instance of your custom event.
@@ -281,19 +272,6 @@
  * kMPRewardedVideoRewardCurrencyTypeUnspecified.
  */
 - (void)rewardedVideoShouldRewardUserForCustomEvent:(MPRewardedVideoCustomEvent *)customEvent reward:(MPRewardedVideoReward *)reward;
-
-/**
- * Call this method when the user couldn't be rewarded for watching the rewarded video.
- * Sent if server call to publisher's reward endpoint did not returned HTTP status code 200.
- *
- * @param customEvent You should pass `self` to allow the MoPub SDK to associate this event with the correct
- * instance of your custom event.
- *
- * @param reward The reward object that contains the currency type as well as the amount that should be rewarded to
- * the user. If the concept of currency type doesn't exist for your ad network, set the reward's currency type as
- * kMPRewardedVideoRewardCurrencyTypeUnspecified.
- */
-- (void)rewardedVideoFailedToRewardUserForCustomEvent:(MPRewardedVideoCustomEvent *)customEvent reward:(MPRewardedVideoReward *)reward;
 
 /**
  * Call this method to get the customer ID associated with this custom event.

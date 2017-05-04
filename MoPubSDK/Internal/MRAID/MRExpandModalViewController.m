@@ -41,7 +41,7 @@
         self.applicationHidesStatusBar = [UIApplication sharedApplication].statusBarHidden;
 
         // pre-ios 7 hiding status bar
-        [MPAdditions_UIApplication mp_preIOS7setApplicationStatusBarHidden:YES];
+        [[UIApplication sharedApplication] mp_preIOS7setApplicationStatusBarHidden:YES];
 
         // In the event we come back to this view controller from another modal, we need to update the status bar's
         // visibility again in ios 7/8.
@@ -56,7 +56,7 @@
     self.statusBarHidden = self.applicationHidesStatusBar;
 
     // pre-ios 7 restoring the status bar
-    [MPAdditions_UIApplication mp_preIOS7setApplicationStatusBarHidden:self.applicationHidesStatusBar];
+    [[UIApplication sharedApplication] mp_preIOS7setApplicationStatusBarHidden:self.applicationHidesStatusBar];
 
     // ios 7/8 restoring status bar
     if ([self respondsToSelector:@selector(setNeedsStatusBarAppearanceUpdate)]) {
@@ -84,7 +84,7 @@
 - (NSUInteger)supportedInterfaceOrientations
 #endif
 {
-    return ([MPAdditions_UIApplication mp_supportsOrientationMask:self.supportedOrientationMask]) ? self.supportedOrientationMask : UIInterfaceOrientationMaskAll;
+    return ([[UIApplication sharedApplication] mp_supportsOrientationMask:self.supportedOrientationMask]) ? self.supportedOrientationMask : UIInterfaceOrientationMaskAll;
 }
 
 - (BOOL)shouldAutorotate
@@ -95,7 +95,7 @@
 // shouldAutorotateToInterfaceOrientation is for ios 5.
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
-    return [MPAdditions_UIApplication mp_doesOrientation:interfaceOrientation matchOrientationMask:self.supportedOrientationMask];
+    return [[UIApplication sharedApplication] mp_doesOrientation:interfaceOrientation matchOrientationMask:self.supportedOrientationMask];
 }
 
 #pragma mark - <MPClosableViewDelegate>

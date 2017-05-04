@@ -12,7 +12,6 @@
 #import "MPRewardedVideoAdapter.h"
 #import "MPInstanceProvider.h"
 #import "MPCoreInstanceProvider.h"
-#import "MPRewardedVideo.h"
 #import "MPRewardedVideoError.h"
 #import "MPLogging.h"
 #import "MoPub.h"
@@ -30,13 +29,12 @@
 
 @implementation MPRewardedVideoAdManager
 
-- (instancetype)initWithAdUnitID:(NSString *)adUnitID delegate:(id<MPRewardedVideoAdManagerDelegate>)delegate rewardDelegate:(id<MPRewardedVideoDelegate>)rewardDelegate
+- (instancetype)initWithAdUnitID:(NSString *)adUnitID delegate:(id<MPRewardedVideoAdManagerDelegate>)delegate
 {
     if (self = [super init]) {
         _adUnitID = [adUnitID copy];
         _communicator = [[MPCoreInstanceProvider sharedProvider] buildMPAdServerCommunicatorWithDelegate:self];
         _delegate = delegate;
-        _rewardDelegate = rewardDelegate;
     }
 
     return self;
@@ -47,25 +45,19 @@
     [_communicator cancel];
 }
 
+- (NSArray *)availableRewards
+{
+    return self.configuration.availableRewards;
+}
+
+- (MPRewardedVideoReward *)selectedReward
+{
+    return self.configuration.selectedReward;
+}
+
 - (Class)customEventClass
 {
     return self.configuration.customEventClass;
-}
-
-- (int)getCustomEventIdentifier;
-{
-    int customClassID = -1;
-    
-    if(!self.adapter)
-        return -1;
-    
-    MPRewardedVideoCustomEvent* customEvent = [self.adapter getCustomEvent];
-    
-    if(customEvent && [[customEvent class] respondsToSelector:@selector(getCustomEventIdentifier)])
-    {
-        customClassID = [[customEvent class] getCustomEventIdentifier];
-    }
-    return customClassID;
 }
 
 - (BOOL)hasAdAvailable
@@ -99,11 +91,44 @@
 
 - (void)presentRewardedVideoAdFromViewController:(UIViewController *)viewController
 {
+    [self presentRewardedVideoAdFromViewController:viewController withReward:nil];
+}
+
+- (void)presentRewardedVideoAdFromViewController:(UIViewController *)viewController withReward:(MPRewardedVideoReward *)reward
+{
     // If we've already played an ad, don't allow playing of another since we allow one play per load.
     if (self.playedAd) {
         NSError *error = [NSError errorWithDomain:MoPubRewardedVideoAdsSDKDomain code:MPRewardedVideoAdErrorAdAlreadyPlayed userInfo:nil];
         [self.delegate rewardedVideoDidFailToPlayForAdManager:self error:error];
         return;
+    }
+
+    // No reward is specified
+    if (reward == nil) {
+        // Only a single currency; It should automatically select the only currency available.
+        if (self.availableRewards.count == 1) {
+            MPRewardedVideoReward * defaultReward = self.availableRewards[0];
+            self.configuration.selectedReward = defaultReward;
+        }
+        // Unspecified rewards in a multicurrency situation are not allowed.
+        else {
+            NSError *error = [NSError errorWithDomain:MoPubRewardedVideoAdsSDKDomain code:MPRewardedVideoAdErrorNoRewardSelected userInfo:nil];
+            [self.delegate rewardedVideoDidFailToPlayForAdManager:self error:error];
+            return;
+        }
+    }
+    // Reward is specified
+    else {
+        // Verify that the reward exists in the list of available rewards. If it doesn't, fail to play the ad.
+        if (![self.availableRewards containsObject:reward]) {
+            NSError *error = [NSError errorWithDomain:MoPubRewardedVideoAdsSDKDomain code:MPRewardedVideoAdErrorInvalidReward userInfo:nil];
+            [self.delegate rewardedVideoDidFailToPlayForAdManager:self error:error];
+            return;
+        }
+        // Reward passes validation, set it as selected.
+        else {
+            self.configuration.selectedReward = reward;
+        }
     }
 
     [self.adapter presentRewardedVideoFromViewController:viewController];
@@ -188,11 +213,8 @@
             return settings;
         }
     }
-    
-    //if mediationSettings is nil or it doesn't contain aClass, then check the global settings:
-    id<MPMediationSettingsProtocol> globalSettings = [[MoPub sharedInstance] globalMediationSettingsForClass:aClass];
-    
-    return globalSettings;
+
+    return nil;
 }
 
 - (void)rewardedVideoDidLoadForAdapter:(MPRewardedVideoAdapter *)adapter
@@ -255,10 +277,6 @@
 - (void)rewardedVideoShouldRewardUserForAdapter:(MPRewardedVideoAdapter *)adapter reward:(MPRewardedVideoReward *)reward
 {
     [self.delegate rewardedVideoShouldRewardUserForAdManager:self reward:reward];
-}
-- (void)rewardedVideoFailedToRewardUserForAdapter:(MPRewardedVideoAdapter *)adapter reward:(MPRewardedVideoReward *)reward
-{
-    [self.delegate rewardedVideoFailedToRewardUserForAdManager:self reward:reward];
 }
 
 - (NSString *)rewardedVideoAdUnitId

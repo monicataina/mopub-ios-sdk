@@ -42,6 +42,7 @@ static NSInteger const kAdSequenceNone = -1;
 + (NSString *)queryParameterForAdSequence:(NSInteger)adSequence;
 + (NSString *)queryParameterForPhysicalScreenSize;
 + (NSString *)queryParameterForBundleIdentifier;
++ (NSString *)queryParameterForAppTransportSecurity;
 + (BOOL)advertisingTrackingEnabled;
 
 @end
@@ -118,6 +119,7 @@ static NSInteger const kAdSequenceNone = -1;
     URLString = [URLString stringByAppendingString:[self queryParameterForAdSequence:adSequence]];
     URLString = [URLString stringByAppendingString:[self queryParameterForPhysicalScreenSize]];
     URLString = [URLString stringByAppendingString:[self queryParameterForBundleIdentifier]];
+    URLString = [URLString stringByAppendingString:[self queryParameterForAppTransportSecurity]];
 
     return [NSURL URLWithString:URLString];
 }
@@ -233,38 +235,38 @@ static NSInteger const kAdSequenceNone = -1;
 {
     NSString *applicationVersion = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
     return [NSString stringWithFormat:@"&av=%@",
-            [MPAdditions_NSString mp_URLEncodedString:applicationVersion]];
+            [applicationVersion mp_URLEncodedString]];
 }
 
 + (NSString *)queryParameterForCarrierName
 {
     NSString *carrierName = [[[MPCoreInstanceProvider sharedProvider] sharedCarrierInfo] objectForKey:@"carrierName"];
     return carrierName ? [NSString stringWithFormat:@"&cn=%@",
-                          [MPAdditions_NSString mp_URLEncodedString:carrierName]] : @"";
+                          [carrierName mp_URLEncodedString]] : @"";
 }
 
 + (NSString *)queryParameterForISOCountryCode
 {
     NSString *code = [[[MPCoreInstanceProvider sharedProvider] sharedCarrierInfo] objectForKey:@"isoCountryCode"];
-    return code ? [NSString stringWithFormat:@"&iso=%@", [MPAdditions_NSString mp_URLEncodedString:code]] : @"";
+    return code ? [NSString stringWithFormat:@"&iso=%@", [code mp_URLEncodedString]] : @"";
 }
 
 + (NSString *)queryParameterForMobileNetworkCode
 {
     NSString *code = [[[MPCoreInstanceProvider sharedProvider] sharedCarrierInfo] objectForKey:@"mobileNetworkCode"];
-    return code ? [NSString stringWithFormat:@"&mnc=%@", [MPAdditions_NSString mp_URLEncodedString:code]] : @"";
+    return code ? [NSString stringWithFormat:@"&mnc=%@", [code mp_URLEncodedString]] : @"";
 }
 
 + (NSString *)queryParameterForMobileCountryCode
 {
     NSString *code = [[[MPCoreInstanceProvider sharedProvider] sharedCarrierInfo] objectForKey:@"mobileCountryCode"];
-    return code ? [NSString stringWithFormat:@"&mcc=%@", [MPAdditions_NSString mp_URLEncodedString:code]] : @"";
+    return code ? [NSString stringWithFormat:@"&mcc=%@", [code mp_URLEncodedString]] : @"";
 }
 
 + (NSString *)queryParameterForDeviceName
 {
-    NSString *deviceName = [MPAdditions_UIDevice mp_hardwareDeviceName];
-    return deviceName ? [NSString stringWithFormat:@"&dn=%@", [MPAdditions_NSString mp_URLEncodedString:deviceName]] : @"";
+    NSString *deviceName = [[UIDevice currentDevice] mp_hardwareDeviceName];
+    return deviceName ? [NSString stringWithFormat:@"&dn=%@", [deviceName mp_URLEncodedString]] : @"";
 }
 
 + (NSString *)queryParameterForDesiredAdAssets:(NSArray *)assets
@@ -288,7 +290,12 @@ static NSInteger const kAdSequenceNone = -1;
 + (NSString *)queryParameterForBundleIdentifier
 {
     NSString *bundleIdentifier = [[NSBundle mainBundle] bundleIdentifier];
-    return bundleIdentifier ? [NSString stringWithFormat:@"&bundle=%@", [MPAdditions_NSString mp_URLEncodedString:bundleIdentifier]] : @"";
+    return bundleIdentifier ? [NSString stringWithFormat:@"&bundle=%@", [bundleIdentifier mp_URLEncodedString]] : @"";
+}
+
++ (NSString *)queryParameterForAppTransportSecurity
+{
+    return [NSString stringWithFormat:@"&ats=%@", @([[MPCoreInstanceProvider sharedProvider] appTransportSecuritySettings])];
 }
 
 + (BOOL)advertisingTrackingEnabled

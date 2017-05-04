@@ -8,13 +8,12 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-#import "UIView+MPAdditions.h"
 
 extern NSString *const kJavaScriptDisableDialogSnippet;
 
-@interface MPAdditions_UIWebView : NSObject
+@interface UIWebView (MPAdditions)
 
-+ (void)mp_setScrollable:(BOOL)scrollable forWebView:(UIWebView *)webView;
-+ (void)disableJavaScriptDialogsForWebView:(UIWebView *)webView;
+- (void)mp_setScrollable:(BOOL)scrollable;
+- (void)disableJavaScriptDialogs;
 
 @end

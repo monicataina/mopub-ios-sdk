@@ -12,7 +12,7 @@
 #import "MPAdDestinationDisplayAgent.h"
 #import "NSURL+MPAdditions.h"
 #import "UIWebView+MPAdditions.h"
-#import "MPAdWebView.h"
+#import "MPWebView.h"
 #import "MPInstanceProvider.h"
 #import "MPCoreInstanceProvider.h"
 #import "MPUserInteractionGestureRecognizer.h"
@@ -35,6 +35,7 @@
 @property (nonatomic, strong) id<MPAdAlertManagerProtocol> adAlertManager;
 @property (nonatomic, assign) BOOL userInteractedWithWebView;
 @property (nonatomic, strong) MPUserInteractionGestureRecognizer *userInteractionRecognizer;
+@property (nonatomic, assign) CGRect frame;
 
 - (void)performActionForMoPubSpecificURL:(NSURL *)URL;
 - (BOOL)shouldIntercept:(NSURL *)URL navigationType:(UIWebViewNavigationType)navigationType;
@@ -57,7 +58,8 @@
 {
     self = [super init];
     if (self) {
-        self.view = [[MPInstanceProvider sharedProvider] buildMPAdWebViewWithFrame:frame delegate:self];
+        _frame = frame;
+
         self.destinationDisplayAgent = [[MPCoreInstanceProvider sharedProvider] buildMPAdDestinationDisplayAgentWithDelegate:self];
         self.delegate = delegate;
         self.shouldHandleRequests = YES;
@@ -65,7 +67,6 @@
 
         self.userInteractionRecognizer = [[MPUserInteractionGestureRecognizer alloc] initWithTarget:self action:@selector(handleInteraction:)];
         self.userInteractionRecognizer.cancelsTouchesInView = NO;
-        [self.view addGestureRecognizer:self.userInteractionRecognizer];
         self.userInteractionRecognizer.delegate = self;
     }
     return self;
@@ -112,6 +113,16 @@
 {
     self.configuration = configuration;
 
+    // Initialize web view
+    if (self.view != nil) {
+        self.view.delegate = nil;
+        [self.view removeFromSuperview];
+        self.view = nil;
+    }
+    self.view = [[MPWebView alloc] initWithFrame:self.frame];
+    self.view.delegate = self;
+    [self.view addGestureRecognizer:self.userInteractionRecognizer];
+
     // Ignore server configuration size for interstitials. At this point our web view
     // is sized correctly for the device's screen. Currently the server sends down values for a 3.5in
     // screen, and they do not size correctly on a 4in screen.
@@ -130,8 +141,8 @@
         self.userInteractedWithWebView = YES;
     }
 
-    [MPAdditions_UIWebView mp_setScrollable:configuration.scrollable forWebView:self.view];
-    [MPAdditions_UIWebView disableJavaScriptDialogsForWebView:self.view];
+    [self.view mp_setScrollable:configuration.scrollable];
+    [self.view disableJavaScriptDialogs];
 
     [self.view loadHTMLString:[configuration adResponseHTMLString]
                       baseURL:[NSURL URLWithString:[MPAPIEndpoints baseURL]]
@@ -192,9 +203,9 @@
     return self.configuration;
 }
 
-#pragma mark - <UIWebViewDelegate>
+#pragma mark - <MPWebViewDelegate>
 
-- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request
+- (BOOL)webView:(MPWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request
  navigationType:(UIWebViewNavigationType)navigationType
 {
     if (!self.shouldHandleRequests) {
@@ -202,28 +213,36 @@
     }
 
     NSURL *URL = [request URL];
-    if ([MPAdditions_NSURL mp_isMoPubSchemeForURL:URL]) {
+    if ([URL mp_isMoPubScheme]) {
         [self performActionForMoPubSpecificURL:URL];
         return NO;
     } else if ([self shouldIntercept:URL navigationType:navigationType]) {
+
+        // Disable intercept without user interaction
+        if (!self.userInteractedWithWebView) {
+            MPLogInfo(@"Redirect without user interaction detected");
+            return NO;
+        }
+
         [self interceptURL:URL];
         return NO;
     } else {
         // don't handle any deep links without user interaction
-        return self.userInteractedWithWebView || [MPAdditions_NSURL mp_isSafeForLoadingWithoutUserActionForURL:URL];
+        return self.userInteractedWithWebView || [URL mp_isSafeForLoadingWithoutUserAction];
     }
 }
 
-- (void)webViewDidStartLoad:(UIWebView *)webView
+- (void)webViewDidStartLoad:(MPWebView *)webView
 {
-    [MPAdditions_UIWebView disableJavaScriptDialogsForWebView:self.view];
+    [self.view disableJavaScriptDialogs];
 }
+
 
 #pragma mark - MoPub-specific URL handlers
 - (void)performActionForMoPubSpecificURL:(NSURL *)URL
 {
     MPLogDebug(@"MPAdWebView - loading MoPub URL: %@", URL);
-    MPMoPubHostCommand command = [MPAdditions_NSURL mp_mopubHostCommandForURL:URL];
+    MPMoPubHostCommand command = [URL mp_mopubHostCommand];
     switch (command) {
         case MPMoPubHostCommandClose:
             [self.delegate adDidClose:self.view];
@@ -243,8 +262,7 @@
 #pragma mark - URL Interception
 - (BOOL)shouldIntercept:(NSURL *)URL navigationType:(UIWebViewNavigationType)navigationType
 {
-    MPAdditions_NSURL *MPURL = (MPAdditions_NSURL *)URL;
-    if ([MPAdditions_NSURL mp_hasTelephoneSchemeForURL:URL] || [MPAdditions_NSURL mp_hasTelephonePromptSchemeForURL:URL]) {
+    if ([URL mp_hasTelephoneScheme] || [URL mp_hasTelephonePromptScheme]) {
         return YES;
     } else if (!(self.configuration.shouldInterceptLinks)) {
         return NO;
@@ -263,7 +281,7 @@
     if (self.configuration.clickTrackingURL) {
         NSString *path = [NSString stringWithFormat:@"%@&r=%@",
                           self.configuration.clickTrackingURL.absoluteString,
-                          [MPAdditions_NSString mp_URLEncodedString:[URL absoluteString]]];
+                          [[URL absoluteString] mp_URLEncodedString]];
         redirectedURL = [NSURL URLWithString:path];
     }
 

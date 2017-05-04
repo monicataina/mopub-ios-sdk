@@ -25,8 +25,8 @@ static NSString * const kFallbackTrackingURLKey = @"fallbackTrackingUrl";
         if (![[[URL host] lowercaseString] isEqualToString:kRequiredHostname]) {
             return nil;
         }
-        
-        NSString *primaryURLString = [MPAdditions_NSURL mp_queryParameterForKey:kPrimaryURLKey forURL:URL];
+
+        NSString *primaryURLString = [URL mp_queryParameterForKey:kPrimaryURLKey];
         if (![primaryURLString length]) {
             return nil;
         }
@@ -34,17 +34,17 @@ static NSString * const kFallbackTrackingURLKey = @"fallbackTrackingUrl";
         _originalURL = [URL copy];
 
         NSMutableArray *primaryTrackingURLs = [NSMutableArray array];
-        NSArray *primaryTrackingURLStrings = [MPAdditions_NSURL mp_queryParametersForKey:kPrimaryTrackingURLKey forURL:URL];
+        NSArray *primaryTrackingURLStrings = [URL mp_queryParametersForKey:kPrimaryTrackingURLKey];
         for (NSString *URLString in primaryTrackingURLStrings) {
             [primaryTrackingURLs addObject:[NSURL URLWithString:URLString]];
         }
         _primaryTrackingURLs = [NSArray arrayWithArray:primaryTrackingURLs];
 
-        NSString *fallbackURLString = [MPAdditions_NSURL mp_queryParameterForKey:kFallbackURLKey forURL:URL];
+        NSString *fallbackURLString = [URL mp_queryParameterForKey:kFallbackURLKey];
         _fallbackURL = [NSURL URLWithString:fallbackURLString];
 
         NSMutableArray *fallbackTrackingURLs = [NSMutableArray array];
-        NSArray *fallbackTrackingURLStrings = [MPAdditions_NSURL mp_queryParametersForKey:kFallbackTrackingURLKey forURL:URL];
+        NSArray *fallbackTrackingURLStrings = [URL mp_queryParametersForKey:kFallbackTrackingURLKey];
         for (NSString *URLString in fallbackTrackingURLStrings) {
             [fallbackTrackingURLs addObject:[NSURL URLWithString:URLString]];
         }

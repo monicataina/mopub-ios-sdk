@@ -10,16 +10,16 @@
 
 NSString *const kJavaScriptDisableDialogSnippet = @"window.alert = function() { }; window.prompt = function() { }; window.confirm = function() { };";
 
-@implementation MPAdditions_UIWebView
+@implementation UIWebView (MPAdditions)
 
 /*
  * Find all subviews that are UIScrollViews or subclasses and set their scrolling and bounce.
  */
-+ (void)mp_setScrollable:(BOOL)scrollable forWebView:(UIWebView *)webView {
+- (void)mp_setScrollable:(BOOL)scrollable {
     #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 50000 // iOS 5.0+
-    if ([webView respondsToSelector:@selector(scrollView)])
+    if ([self respondsToSelector:@selector(scrollView)]) 
     {
-        UIScrollView *scrollView = webView.scrollView;
+        UIScrollView *scrollView = self.scrollView;
         scrollView.scrollEnabled = scrollable;
         scrollView.bounces = scrollable;
     } 
@@ -27,7 +27,7 @@ NSString *const kJavaScriptDisableDialogSnippet = @"window.alert = function() { 
     #endif
     {
         UIScrollView *scrollView = nil;
-        for (UIView *v in webView.subviews)
+        for (UIView *v in self.subviews)
         {
             if ([v isKindOfClass:[UIScrollView class]])
             {
@@ -43,9 +43,9 @@ NSString *const kJavaScriptDisableDialogSnippet = @"window.alert = function() { 
 /*
  * Redefine alert, prompt, and confirm to do nothing
  */
-+ (void)disableJavaScriptDialogsForWebView:(UIWebView *)webView
+- (void)disableJavaScriptDialogs
 {
-    [webView stringByEvaluatingJavaScriptFromString:kJavaScriptDisableDialogSnippet];
+    [self stringByEvaluatingJavaScriptFromString:kJavaScriptDisableDialogSnippet];
 }
 
 @end

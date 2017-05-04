@@ -57,7 +57,7 @@ static void exponentialDecayInterpolation(void *info, const CGFloat *input, CGFl
         self.opaque = NO;
 
         // Close button.
-        _closeButton = [MPAdditions_UIButton buttonWithType:UIButtonTypeCustom];
+        _closeButton = [UIButton buttonWithType:UIButtonTypeCustom];
         _closeButton.alpha = 0.0;
         _closeButton.hidden = YES;
         [_closeButton addTarget:self

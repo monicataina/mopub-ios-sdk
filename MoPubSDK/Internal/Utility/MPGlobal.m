@@ -52,7 +52,7 @@ CGRect MPApplicationFrame()
 CGRect MPScreenBounds()
 {
     // Prior to iOS 8, window and screen coordinates were fixed and always specified relative to the
-    // device’s screen in a portrait orientation. Starting with iOS8, the `fixedCoordinateSpace`
+    // deviceâ€™s screen in a portrait orientation. Starting with iOS8, the `fixedCoordinateSpace`
     // property was introduced which specifies bounds that always reflect the screen dimensions of
     // the device in a portrait-up orientation.
     CGRect bounds = [UIScreen mainScreen].bounds;
@@ -185,18 +185,18 @@ BOOL MPViewIntersectsParentWindowWithPercent(UIView *view, CGFloat percentVisibl
 
 NSString *MPResourcePathForResource(NSString *resourceName)
 {
-#ifdef MP_FABRIC
-    // We store all assets inside a bundle for Fabric.
-    return [@"MoPub.bundle" stringByAppendingPathComponent:resourceName];
-#else
-    if ([[UIDevice currentDevice].systemVersion compare:@"8.0" options:NSNumericSearch] != NSOrderedAscending) {
+    if ([[NSBundle mainBundle] pathForResource:@"MoPub" ofType:@"bundle"] != nil) {
+        return [@"MoPub.bundle" stringByAppendingPathComponent:resourceName];
+    }
+    else if ([[UIDevice currentDevice].systemVersion compare:@"8.0" options:NSNumericSearch] != NSOrderedAscending) {
         // When using open source or cocoapods (on ios 8 and above), we can rely on the MoPub class
         // living in the same bundle/framework as the assets.
         // We can use pathForResource on ios 8 and above to succesfully load resources.
         NSBundle *resourceBundle = [NSBundle bundleForClass:[MoPub class]];
         NSString *resourcePath = [resourceBundle pathForResource:resourceName ofType:nil];
         return resourcePath;
-    } else {
+    }
+    else {
         // We can just return the resource name because:
         // 1. This is being used as an open source release so the resource will be
         // in the main bundle.
@@ -204,7 +204,6 @@ NSString *MPResourcePathForResource(NSString *resourceName)
         // on ios 8 and above.
         return resourceName;
     }
-#endif
 }
 
 NSArray *MPConvertStringArrayToURLArray(NSArray *strArray)
@@ -223,24 +222,14 @@ NSArray *MPConvertStringArrayToURLArray(NSArray *strArray)
     return urls;
 }
 
-NSBundle *MPResourceBundleForClass(Class aClass)
-{
-#ifdef MP_FABRIC
-    NSString *fabricBundlePath = [[NSBundle mainBundle] pathForResource:@"MoPub" ofType:@"bundle"];
-    return [NSBundle bundleWithPath:fabricBundlePath];
-#else
-    return [NSBundle bundleForClass:aClass];
-#endif
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-@implementation MPAdditions_NSString
+@implementation NSString (MPAdditions)
 
-+ (NSString *)mp_URLEncodedString:(NSString*)string
+- (NSString *)mp_URLEncodedString
 {
     NSString *result = (NSString *)CFBridgingRelease(CFURLCreateStringByAddingPercentEscapes(NULL,
-                                                                           (CFStringRef)string,
+                                                                           (CFStringRef)self,
                                                                            NULL,
                                                                            (CFStringRef)@"!*'();:@&=+$,/?%#[]<>",
                                                                            kCFStringEncodingUTF8));
@@ -251,9 +240,9 @@ NSBundle *MPResourceBundleForClass(Class aClass)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-@implementation MPAdditions_UIDevice
+@implementation UIDevice (MPAdditions)
 
-+ (NSString *)mp_hardwareDeviceName
+- (NSString *)mp_hardwareDeviceName
 {
     size_t size;
     sysctlbyname("hw.machine", NULL, &size, NULL, 0);
@@ -266,9 +255,9 @@ NSBundle *MPResourceBundleForClass(Class aClass)
 
 @end
 
-@implementation MPAdditions_UIApplication
+@implementation UIApplication (MPAdditions)
 
-+ (void)mp_preIOS7setApplicationStatusBarHidden:(BOOL)hidden
+- (void)mp_preIOS7setApplicationStatusBarHidden:(BOOL)hidden
 {
     // Hiding the status bar should use a fade effect.
     // Displaying the status bar should use no animation.
@@ -277,7 +266,7 @@ NSBundle *MPResourceBundleForClass(Class aClass)
     [[UIApplication sharedApplication] setStatusBarHidden:hidden withAnimation:animation];
 }
 
-+ (BOOL)mp_supportsOrientationMask:(UIInterfaceOrientationMask)orientationMask
+- (BOOL)mp_supportsOrientationMask:(UIInterfaceOrientationMask)orientationMask
 {
     NSArray *supportedOrientations = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"UISupportedInterfaceOrientations"];
 
@@ -308,7 +297,7 @@ NSBundle *MPResourceBundleForClass(Class aClass)
     return NO;
 }
 
-+ (BOOL)mp_doesOrientation:(UIInterfaceOrientation)orientation matchOrientationMask:(UIInterfaceOrientationMask)orientationMask
+- (BOOL)mp_doesOrientation:(UIInterfaceOrientation)orientation matchOrientationMask:(UIInterfaceOrientationMask)orientationMask
 {
     BOOL supportsLandscapeLeft = (orientationMask & UIInterfaceOrientationMaskLandscapeLeft) > 0;
     BOOL supportsLandscapeRight = (orientationMask & UIInterfaceOrientationMaskLandscapeRight) > 0;
@@ -349,7 +338,7 @@ NSBundle *MPResourceBundleForClass(Class aClass)
 
 - (id)initWithURL:(NSURL *)url clickHandler:(MPTelephoneConfirmationControllerClickHandler)clickHandler
 {
-    if (![MPAdditions_NSURL mp_hasTelephoneSchemeForURL:url] && ![MPAdditions_NSURL mp_hasTelephonePromptSchemeForURL:url]) {
+    if (![url mp_hasTelephoneScheme] && ![url mp_hasTelephonePromptScheme]) {
         // Shouldn't be here as the url must have a tel or telPrompt scheme.
         MPLogError(@"Processing URL as a telephone URL when %@ doesn't follow the tel:// or telprompt:// schemes", url.absoluteString);
         return nil;
@@ -375,7 +364,7 @@ NSBundle *MPResourceBundleForClass(Class aClass)
         self.clickHandler = clickHandler;
 
         // We want to manually handle telPrompt scheme alerts.  So we'll convert telPrompt schemes to tel schemes.
-        if ([MPAdditions_NSURL mp_hasTelephonePromptSchemeForURL:url]) {
+        if ([url mp_hasTelephonePromptScheme]) {
             self.telephoneURL = [NSURL URLWithString:[NSString stringWithFormat:@"tel://%@", phoneNumber]];
         } else {
             self.telephoneURL = url;

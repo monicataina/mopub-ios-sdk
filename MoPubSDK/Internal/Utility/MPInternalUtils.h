@@ -15,7 +15,11 @@
 
 @interface MPInternalUtils : NSObject
 
-+ (void)mp_safeSetObject:(id)obj forKey:(id<NSCopying>)key forDictionary:(NSMutableDictionary*)dictionary;
-+ (void)mp_safeSetObject:(id)obj forKey:(id<NSCopying>)key withDefault:(id)defaultObj forDictionary:(NSMutableDictionary*)dictionary;
+@end
+
+@interface NSMutableDictionary (MPInternalUtils)
+
+- (void)mp_safeSetObject:(id)obj forKey:(id<NSCopying>)key;
+- (void)mp_safeSetObject:(id)obj forKey:(id<NSCopying>)key withDefault:(id)defaultObj;
 
 @end

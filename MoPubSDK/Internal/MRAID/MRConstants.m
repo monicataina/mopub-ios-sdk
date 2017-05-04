@@ -7,3 +7,8 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MRConstants.h"
+
+NSString *const kOrientationPropertyForceOrientationPortraitKey = @"portrait";
+NSString *const kOrientationPropertyForceOrientationLandscapeKey = @"landscape";
+NSString *const kOrientationPropertyForceOrientationNoneKey = @"none";

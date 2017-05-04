@@ -8,6 +8,10 @@
 #import "MPGlobal.h"
 #import "MPCoreInstanceProvider.h"
 
+// MPWebView
+@class MPWebView;
+@protocol MPWebViewDelegate;
+
 // Banners
 @class MPBannerAdManager;
 @protocol MPBannerAdManagerDelegate;
@@ -31,13 +35,11 @@
 @class MPRewardedVideoAdManager;
 @class MPRewardedVideoAdapter;
 @class MPRewardedVideoCustomEvent;
-@protocol MPRewardedVideoDelegate;
 @protocol MPRewardedVideoAdapterDelegate;
 @protocol MPRewardedVideoCustomEventDelegate;
 @protocol MPRewardedVideoAdManagerDelegate;
 
 // HTML Ads
-@class MPAdWebView;
 @class MPAdWebViewAgent;
 @protocol MPAdWebViewAgentDelegate;
 
@@ -56,7 +58,6 @@
 @protocol MRNativeCommandHandlerDelegate;
 
 //Native
-#if MP_HAS_NATIVE_PACKAGE
 @protocol MPNativeCustomEventDelegate;
 @class MPNativeCustomEvent;
 @class MPNativeAdSource;
@@ -66,7 +67,6 @@
 @class MPStreamAdPlacer;
 @class MPAdPositioning;
 @protocol MPNativeAdRenderer;
-#endif
 
 @interface MPInstanceProvider : NSObject
 
@@ -93,37 +93,32 @@
                                                                             configuration:(MPAdConfiguration *)configuration;
 
 #pragma mark - Rewarded Video
-- (MPRewardedVideoAdManager *)buildRewardedVideoAdManagerWithAdUnitID:(NSString *)adUnitID delegate:(id<MPRewardedVideoAdManagerDelegate>)delegate rewardDelegate:(id<MPRewardedVideoDelegate>)rewardDelegate;
+- (MPRewardedVideoAdManager *)buildRewardedVideoAdManagerWithAdUnitID:(NSString *)adUnitID delegate:(id<MPRewardedVideoAdManagerDelegate>)delegate;
 - (MPRewardedVideoAdapter *)buildRewardedVideoAdapterWithDelegate:(id<MPRewardedVideoAdapterDelegate>)delegate;
 - (MPRewardedVideoCustomEvent *)buildRewardedVideoCustomEventFromCustomClass:(Class)customClass delegate:(id<MPRewardedVideoCustomEventDelegate>)delegate;
 
 
 #pragma mark - HTML Ads
-- (MPAdWebView *)buildMPAdWebViewWithFrame:(CGRect)frame
-                                  delegate:(id<UIWebViewDelegate>)delegate;
 - (MPAdWebViewAgent *)buildMPAdWebViewAgentWithAdWebViewFrame:(CGRect)frame
                                                      delegate:(id<MPAdWebViewAgentDelegate>)delegate;
 
 #pragma mark - MRAID
-- (MPClosableView *)buildMRAIDMPClosableViewWithFrame:(CGRect)frame webView:(UIWebView *)webView delegate:(id<MPClosableViewDelegate>)delegate;
+- (MPClosableView *)buildMRAIDMPClosableViewWithFrame:(CGRect)frame webView:(MPWebView *)webView delegate:(id<MPClosableViewDelegate>)delegate;
 - (MRBundleManager *)buildMRBundleManager;
 - (MRController *)buildBannerMRControllerWithFrame:(CGRect)frame delegate:(id<MRControllerDelegate>)delegate;
 - (MRController *)buildInterstitialMRControllerWithFrame:(CGRect)frame delegate:(id<MRControllerDelegate>)delegate;
-- (MRBridge *)buildMRBridgeWithWebView:(UIWebView *)webView delegate:(id<MRBridgeDelegate>)delegate;
-- (UIWebView *)buildUIWebViewWithFrame:(CGRect)frame;
+- (MRBridge *)buildMRBridgeWithWebView:(MPWebView *)webView delegate:(id<MRBridgeDelegate>)delegate;
 - (MRVideoPlayerManager *)buildMRVideoPlayerManagerWithDelegate:(id<MRVideoPlayerManagerDelegate>)delegate;
 - (MPMoviePlayerViewController *)buildMPMoviePlayerViewControllerWithURL:(NSURL *)URL;
 - (MRNativeCommandHandler *)buildMRNativeCommandHandlerWithDelegate:(id<MRNativeCommandHandlerDelegate>)delegate;
 
 #pragma mark - Native
 
-#if MP_HAS_NATIVE_PACKAGE
 - (MPNativeCustomEvent *)buildNativeCustomEventFromCustomClass:(Class)customClass
                                                       delegate:(id<MPNativeCustomEventDelegate>)delegate;
 - (MPNativeAdSource *)buildNativeAdSourceWithDelegate:(id<MPNativeAdSourceDelegate>)delegate;
 - (MPNativePositionSource *)buildNativePositioningSource;
 - (MPStreamAdPlacementData *)buildStreamAdPlacementDataWithPositioning:(MPAdPositioning *)positioning;
 - (MPStreamAdPlacer *)buildStreamAdPlacerWithViewController:(UIViewController *)controller adPositioning:(MPAdPositioning *)positioning rendererConfigurations:(NSArray *)rendererConfigurations;
-#endif
 
 @end

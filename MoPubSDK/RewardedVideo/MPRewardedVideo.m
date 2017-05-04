@@ -12,13 +12,13 @@
 #import "MPRewardedVideoError.h"
 #import "MPRewardedVideoConnection.h"
 #import "MPRewardedVideo+Internal.h"
-#import "MPRewardedVideoCustomEvent.h"
 
 static MPRewardedVideo *gSharedInstance = nil;
 
 @interface MPRewardedVideo () <MPRewardedVideoAdManagerDelegate, MPRewardedVideoConnectionDelegate>
 
 @property (nonatomic, strong) NSMutableDictionary *rewardedVideoAdManagers;
+@property (nonatomic, weak) id<MPRewardedVideoDelegate> delegate;
 @property (nonatomic) NSMutableArray *rewardedVideoConnections;
 
 + (MPRewardedVideo *)sharedInstance;
@@ -37,30 +37,30 @@ static MPRewardedVideo *gSharedInstance = nil;
     return self;
 }
 
-+ (void)loadRewardedVideoAdWithAdUnitID:(NSString *)adUnitID withMediationSettings:(NSArray *)mediationSettings  delegate:(id<MPRewardedVideoDelegate>)delegate
++ (void)loadRewardedVideoAdWithAdUnitID:(NSString *)adUnitID withMediationSettings:(NSArray *)mediationSettings
 {
-    [MPRewardedVideo loadRewardedVideoAdWithAdUnitID:adUnitID keywords:nil location:nil mediationSettings:mediationSettings delegate:delegate];
+    [MPRewardedVideo loadRewardedVideoAdWithAdUnitID:adUnitID keywords:nil location:nil mediationSettings:mediationSettings];
 }
 
-+ (void)loadRewardedVideoAdWithAdUnitID:(NSString *)adUnitID keywords:(NSString *)keywords location:(CLLocation *)location mediationSettings:(NSArray *)mediationSettings delegate:(id<MPRewardedVideoDelegate>)delegate
++ (void)loadRewardedVideoAdWithAdUnitID:(NSString *)adUnitID keywords:(NSString *)keywords location:(CLLocation *)location mediationSettings:(NSArray *)mediationSettings
 {
-    [self loadRewardedVideoAdWithAdUnitID:adUnitID keywords:keywords location:location customerId:nil mediationSettings:mediationSettings delegate:delegate];
+    [self loadRewardedVideoAdWithAdUnitID:adUnitID keywords:keywords location:location customerId:nil mediationSettings:mediationSettings];
 }
 
-+ (void)loadRewardedVideoAdWithAdUnitID:(NSString *)adUnitID keywords:(NSString *)keywords location:(CLLocation *)location customerId:(NSString *)customerId mediationSettings:(NSArray *)mediationSettings delegate:(id<MPRewardedVideoDelegate>)delegate
++ (void)loadRewardedVideoAdWithAdUnitID:(NSString *)adUnitID keywords:(NSString *)keywords location:(CLLocation *)location customerId:(NSString *)customerId mediationSettings:(NSArray *)mediationSettings
 {
     MPRewardedVideo *sharedInstance = [[self class] sharedInstance];
 
     if (![adUnitID length]) {
         NSError *error = [NSError errorWithDomain:MoPubRewardedVideoAdsSDKDomain code:MPRewardedVideoAdErrorInvalidAdUnitID userInfo:nil];
-        [delegate rewardedVideoAdDidFailToLoadForAdUnitID:adUnitID forCustomClassID:-1 error:error];
+        [sharedInstance.delegate rewardedVideoAdDidFailToLoadForAdUnitID:adUnitID error:error];
         return;
     }
 
     MPRewardedVideoAdManager *adManager = sharedInstance.rewardedVideoAdManagers[adUnitID];
 
     if (!adManager) {
-        adManager = [[MPInstanceProvider sharedProvider] buildRewardedVideoAdManagerWithAdUnitID:adUnitID delegate:sharedInstance rewardDelegate:delegate];
+        adManager = [[MPInstanceProvider sharedProvider] buildRewardedVideoAdManagerWithAdUnitID:adUnitID delegate:sharedInstance];
         sharedInstance.rewardedVideoAdManagers[adUnitID] = adManager;
     }
 
@@ -77,7 +77,23 @@ static MPRewardedVideo *gSharedInstance = nil;
     return [adManager hasAdAvailable];
 }
 
-+ (void)presentRewardedVideoAdForAdUnitID:(NSString *)adUnitID fromViewController:(UIViewController *)viewController
++ (NSArray *)availableRewardsForAdUnitID:(NSString *)adUnitID
+{
+    MPRewardedVideo *sharedInstance = [[self class] sharedInstance];
+    MPRewardedVideoAdManager *adManager = sharedInstance.rewardedVideoAdManagers[adUnitID];
+
+    return adManager.availableRewards;
+}
+
++ (MPRewardedVideoReward *)selectedRewardForAdUnitID:(NSString *)adUnitID
+{
+    MPRewardedVideo *sharedInstance = [[self class] sharedInstance];
+    MPRewardedVideoAdManager *adManager = sharedInstance.rewardedVideoAdManagers[adUnitID];
+
+    return adManager.selectedReward;
+}
+
++ (void)presentRewardedVideoAdForAdUnitID:(NSString *)adUnitID fromViewController:(UIViewController *)viewController withReward:(MPRewardedVideoReward *)reward
 {
     MPRewardedVideo *sharedInstance = [[self class] sharedInstance];
     MPRewardedVideoAdManager *adManager = sharedInstance.rewardedVideoAdManagers[adUnitID];
@@ -100,7 +116,12 @@ static MPRewardedVideo *gSharedInstance = nil;
         MPLogWarn(@"Attempting to present a rewarded video ad in non-key window. The ad may not render properly.");
     }
 
-    [adManager presentRewardedVideoAdFromViewController:viewController];
+    [adManager presentRewardedVideoAdFromViewController:viewController withReward:reward];
+}
+
++ (void)presentRewardedVideoAdForAdUnitID:(NSString *)adUnitID fromViewController:(UIViewController *)viewController
+{
+    [MPRewardedVideo presentRewardedVideoAdForAdUnitID:adUnitID fromViewController:viewController withReward:nil];
 }
 
 #pragma mark - Private
@@ -117,17 +138,15 @@ static MPRewardedVideo *gSharedInstance = nil;
 }
 
 // This is private as we require the developer to initialize rewarded video through the MoPub object.
-+ (void)initializeRewardedVideo
++ (void)initializeWithDelegate:(id<MPRewardedVideoDelegate>)delegate
 {
     MPRewardedVideo *sharedInstance = [[self class] sharedInstance];
 
-    static bool isInitialized = false;
-    
     // Do not allow calls to initialize twice.
-    if (isInitialized) {
+    if (sharedInstance.delegate) {
         MPLogWarn(@"Attempting to initialize MPRewardedVideo when it has already been initialized.");
     } else {
-        isInitialized = true;
+        sharedInstance.delegate = delegate;
     }
 }
 
@@ -135,65 +154,57 @@ static MPRewardedVideo *gSharedInstance = nil;
 
 - (void)rewardedVideoDidLoadForAdManager:(MPRewardedVideoAdManager *)manager
 {
-    if ([manager.rewardDelegate respondsToSelector:@selector(rewardedVideoAdDidLoadForAdUnitID:forCustomClassID:)]) {
-        int customEventID = [manager getCustomEventIdentifier];
-        [manager.rewardDelegate rewardedVideoAdDidLoadForAdUnitID:manager.adUnitID forCustomClassID:customEventID];
+    if ([self.delegate respondsToSelector:@selector(rewardedVideoAdDidLoadForAdUnitID:)]) {
+        [self.delegate rewardedVideoAdDidLoadForAdUnitID:manager.adUnitID];
     }
 }
 
 - (void)rewardedVideoDidFailToLoadForAdManager:(MPRewardedVideoAdManager *)manager error:(NSError *)error
 {
-    if ([manager.rewardDelegate respondsToSelector:@selector(rewardedVideoAdDidFailToLoadForAdUnitID:forCustomClassID:error:)]) {
-        int customEventID = [manager getCustomEventIdentifier];
-        [manager.rewardDelegate rewardedVideoAdDidFailToLoadForAdUnitID:manager.adUnitID forCustomClassID:customEventID error:error];
+    if ([self.delegate respondsToSelector:@selector(rewardedVideoAdDidFailToLoadForAdUnitID:error:)]) {
+        [self.delegate rewardedVideoAdDidFailToLoadForAdUnitID:manager.adUnitID error:error];
     }
 }
 
 - (void)rewardedVideoDidExpireForAdManager:(MPRewardedVideoAdManager *)manager
 {
-    if ([manager.rewardDelegate respondsToSelector:@selector(rewardedVideoAdDidExpireForAdUnitID:forCustomClassID:)]) {
-        int customEventID = [manager getCustomEventIdentifier];
-        [manager.rewardDelegate rewardedVideoAdDidExpireForAdUnitID:manager.adUnitID forCustomClassID:customEventID];
+    if ([self.delegate respondsToSelector:@selector(rewardedVideoAdDidExpireForAdUnitID:)]) {
+        [self.delegate rewardedVideoAdDidExpireForAdUnitID:manager.adUnitID];
     }
 }
 
 - (void)rewardedVideoDidFailToPlayForAdManager:(MPRewardedVideoAdManager *)manager error:(NSError *)error
 {
-    if ([manager.rewardDelegate respondsToSelector:@selector(rewardedVideoAdDidFailToPlayForAdUnitID:forCustomClassID:error:)]) {
-        int customEventID = [manager getCustomEventIdentifier];
-        [manager.rewardDelegate rewardedVideoAdDidFailToPlayForAdUnitID:manager.adUnitID forCustomClassID:customEventID error:error];
+    if ([self.delegate respondsToSelector:@selector(rewardedVideoAdDidFailToPlayForAdUnitID:error:)]) {
+        [self.delegate rewardedVideoAdDidFailToPlayForAdUnitID:manager.adUnitID error:error];
     }
 }
 
 - (void)rewardedVideoWillAppearForAdManager:(MPRewardedVideoAdManager *)manager
 {
-    if ([manager.rewardDelegate respondsToSelector:@selector(rewardedVideoAdWillAppearForAdUnitID:forCustomClassID:)]) {
-        int customEventID = [manager getCustomEventIdentifier];
-        [manager.rewardDelegate rewardedVideoAdWillAppearForAdUnitID:manager.adUnitID forCustomClassID:customEventID];
+    if ([self.delegate respondsToSelector:@selector(rewardedVideoAdWillAppearForAdUnitID:)]) {
+        [self.delegate rewardedVideoAdWillAppearForAdUnitID:manager.adUnitID];
     }
 }
 
 - (void)rewardedVideoDidAppearForAdManager:(MPRewardedVideoAdManager *)manager
 {
-    if ([manager.rewardDelegate respondsToSelector:@selector(rewardedVideoAdDidAppearForAdUnitID:forCustomClassID:)]) {
-        int customEventID = [manager getCustomEventIdentifier];
-        [manager.rewardDelegate rewardedVideoAdDidAppearForAdUnitID:manager.adUnitID forCustomClassID:customEventID];
+    if ([self.delegate respondsToSelector:@selector(rewardedVideoAdDidAppearForAdUnitID:)]) {
+        [self.delegate rewardedVideoAdDidAppearForAdUnitID:manager.adUnitID];
     }
 }
 
 - (void)rewardedVideoWillDisappearForAdManager:(MPRewardedVideoAdManager *)manager
 {
-    if ([manager.rewardDelegate respondsToSelector:@selector(rewardedVideoAdWillDisappearForAdUnitID:forCustomClassID:)]) {
-        int customEventID = [manager getCustomEventIdentifier];
-        [manager.rewardDelegate rewardedVideoAdWillDisappearForAdUnitID:manager.adUnitID forCustomClassID:customEventID];
+    if ([self.delegate respondsToSelector:@selector(rewardedVideoAdWillDisappearForAdUnitID:)]) {
+        [self.delegate rewardedVideoAdWillDisappearForAdUnitID:manager.adUnitID];
     }
 }
 
 - (void)rewardedVideoDidDisappearForAdManager:(MPRewardedVideoAdManager *)manager
 {
-    if ([manager.rewardDelegate respondsToSelector:@selector(rewardedVideoAdDidDisappearForAdUnitID:forCustomClassID:)]) {
-        int customEventID = [manager getCustomEventIdentifier];
-        [manager.rewardDelegate rewardedVideoAdDidDisappearForAdUnitID:manager.adUnitID forCustomClassID:customEventID];
+    if ([self.delegate respondsToSelector:@selector(rewardedVideoAdDidDisappearForAdUnitID:)]) {
+        [self.delegate rewardedVideoAdDidDisappearForAdUnitID:manager.adUnitID];
     }
 
     // Since multiple ad units may be attached to the same network, we should notify the custom events (which should then notify the application)
@@ -212,32 +223,22 @@ static MPRewardedVideo *gSharedInstance = nil;
 
 - (void)rewardedVideoDidReceiveTapEventForAdManager:(MPRewardedVideoAdManager *)manager
 {
-    if ([manager.rewardDelegate respondsToSelector:@selector(rewardedVideoAdDidReceiveTapEventForAdUnitID:forCustomClassID:)]) {
-        int customEventID = [manager getCustomEventIdentifier];
-        [manager.rewardDelegate rewardedVideoAdDidReceiveTapEventForAdUnitID:manager.adUnitID forCustomClassID:customEventID];
+    if ([self.delegate respondsToSelector:@selector(rewardedVideoAdDidReceiveTapEventForAdUnitID:)]) {
+        [self.delegate rewardedVideoAdDidReceiveTapEventForAdUnitID:manager.adUnitID];
     }
 }
 
 - (void)rewardedVideoWillLeaveApplicationForAdManager:(MPRewardedVideoAdManager *)manager
 {
-    if ([manager.rewardDelegate respondsToSelector:@selector(rewardedVideoAdWillLeaveApplicationForAdUnitID:forCustomClassID:)]) {
-        int customEventID = [manager getCustomEventIdentifier];
-        [manager.rewardDelegate rewardedVideoAdWillLeaveApplicationForAdUnitID:manager.adUnitID forCustomClassID:customEventID];
+    if ([self.delegate respondsToSelector:@selector(rewardedVideoAdWillLeaveApplicationForAdUnitID:)]) {
+        [self.delegate rewardedVideoAdWillLeaveApplicationForAdUnitID:manager.adUnitID];
     }
 }
 
 - (void)rewardedVideoShouldRewardUserForAdManager:(MPRewardedVideoAdManager *)manager reward:(MPRewardedVideoReward *)reward
 {
-    if ([manager.rewardDelegate respondsToSelector:@selector(rewardedVideoAdShouldRewardForAdUnitID:forCustomClassID:reward:)]) {
-        int customEventID = [manager getCustomEventIdentifier];
-        [manager.rewardDelegate rewardedVideoAdShouldRewardForAdUnitID:manager.adUnitID forCustomClassID:customEventID reward:reward];
-    }
-}
-- (void)rewardedVideoFailedToRewardUserForAdManager:(MPRewardedVideoAdManager *)manager reward:(MPRewardedVideoReward *)reward
-{
-    if ([manager.rewardDelegate respondsToSelector:@selector(rewardedVideoAdFailedToRewardForAdUnitID:forCustomClassID:reward:)]) {
-        int customEventID = [manager getCustomEventIdentifier];
-        [manager.rewardDelegate rewardedVideoAdFailedToRewardForAdUnitID:manager.adUnitID forCustomClassID:customEventID reward:reward];
+    if ([self.delegate respondsToSelector:@selector(rewardedVideoAdShouldRewardForAdUnitID:reward:)]) {
+        [self.delegate rewardedVideoAdShouldRewardForAdUnitID:manager.adUnitID reward:reward];
     }
 }
 

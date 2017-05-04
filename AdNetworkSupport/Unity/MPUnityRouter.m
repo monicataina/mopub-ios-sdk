@@ -36,7 +36,9 @@
 {
     self = [super init];
     self.m_playerMetaData = [[UADSPlayerMetaData alloc] init];
-   
+    
+    self.m_delegates = [[NSMutableArray alloc] init];
+    
     return self;
 }
 
@@ -51,7 +53,7 @@
     else
     {
         if (!self.isAdPlaying) {
-            self.delegate = delegate;
+            [self.m_delegates addObject:delegate];
 
             static dispatch_once_t unityInitToken;
             dispatch_once(&unityInitToken, ^{
@@ -74,7 +76,7 @@
 
             // Need to check immediately as an ad may be cached.
             if ([self isAdAvailableForPlacementId:placementId]) {
-                    [self.delegate unityAdsReady:placementId];
+                [delegate unityAdsReady:placementId];
             }
             // MoPub timeout will handle the case for an ad failing to load.
         } else {
@@ -100,8 +102,10 @@
     }
     if (!self.isAdPlaying && [self isAdAvailableForPlacementId:placementId]) {
         self.isAdPlaying = YES;
-
-        self.delegate = delegate;
+        if(![self.m_delegates containsObject:delegate])
+        {
+            [self.m_delegates addObject:delegate];
+        }
         if (settings.userIdentifier.length > 0) {
             [self.m_playerMetaData setServerId:settings.userIdentifier];
             [self.m_playerMetaData commit];
@@ -119,9 +123,9 @@
 
 - (void)clearDelegate:(id<MPUnityRouterDelegate>)delegate
 {
-    if (self.delegate == delegate)
+    if([self.m_delegates containsObject:delegate])
     {
-        [self setDelegate:nil];
+        [self.m_delegates removeObject:delegate];
     }
 }
 
@@ -129,25 +133,53 @@
 
 - (void)unityAdsReady:(NSString *)placementId
 {
-    [self.delegate unityAdsReady:placementId];
+    NSArray* loadDelegates = [[NSMutableArray alloc] initWithArray:self.m_delegates];
+    for (id<MPUnityRouterDelegate> delegate in loadDelegates) {
+        if(delegate != nil)
+        {
+            [delegate unityAdsReady:placementId];
+        }
+    }
 }
 
 - (void)unityAdsDidError:(UnityAdsError)error withMessage:(NSString *)message {
-    [self.delegate unityAdsDidError:error withMessage:message];
+    NSArray* loadDelegates = [[NSMutableArray alloc] initWithArray:self.m_delegates];
+    for (id<MPUnityRouterDelegate> delegate in loadDelegates) {
+        if(delegate != nil)
+        {
+            [delegate unityAdsDidError:error withMessage:message];
+        }
+    }
 }
 
 - (void)unityAdsDidStart:(NSString *)placementId {
-    [self.delegate unityAdsDidStart:placementId];
+    NSArray* loadDelegates = [[NSMutableArray alloc] initWithArray:self.m_delegates];
+    for (id<MPUnityRouterDelegate> delegate in loadDelegates) {
+        if(delegate != nil)
+        {
+            [delegate unityAdsDidStart:placementId];
+        }
+    }
 }
 
 - (void)unityAdsDidFinish:(NSString *)placementId withFinishState:(UnityAdsFinishState)state {
     self.isAdPlaying = NO;
-    [self.delegate unityAdsDidFinish:placementId withFinishState:state];
+    NSArray* loadDelegates = [[NSMutableArray alloc] initWithArray:self.m_delegates];
+    for (id<MPUnityRouterDelegate> delegate in loadDelegates) {
+        if(delegate != nil)
+        {
+            [delegate unityAdsDidFinish:placementId withFinishState:state];
+        }
+    }
 }
-
-- (void)unityAdsDidClick:(NSString *)placementId
-{
-    [self.delegate unityAdsDidClick:placementId];
+- (void)unityAdsDidClick:(NSString *)placementId {
+    NSArray* loadDelegates = [[NSMutableArray alloc] initWithArray:self.m_delegates];
+    for (id<MPUnityRouterDelegate> delegate in loadDelegates) {
+        if(delegate != nil)
+        {
+            [delegate unityAdsDidClick:placementId];
+        }
+    }
 }
 
 @end

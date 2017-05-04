@@ -10,9 +10,9 @@
 
 NSString * const kMoPubHTTPHeaderContentType = @"Content-Type";
 
-@implementation MPAdditions_NSHTTPURLResponse
+@implementation NSHTTPURLResponse (MPAdditions)
 
-+ (NSStringEncoding)stringEncodingFromContentType:(NSString *)contentType
+- (NSStringEncoding)stringEncodingFromContentType:(NSString *)contentType
 {
     NSStringEncoding encoding = NSUTF8StringEncoding;
 

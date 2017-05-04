@@ -17,7 +17,7 @@
 
 @interface MPUnityRouter : NSObject <UnityAdsExtendedDelegate>
 
-@property (nonatomic, weak) id<MPUnityRouterDelegate> delegate;
+@property (nonatomic, strong) NSMutableArray* m_delegates;
 
 + (MPUnityRouter *)sharedRouter;
 

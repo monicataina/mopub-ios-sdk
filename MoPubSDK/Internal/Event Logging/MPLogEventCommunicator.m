@@ -86,7 +86,7 @@ static const NSInteger MAX_CONCURRENT_CONNECTIONS = 1;
     NSData *jsonData = [NSJSONSerialization dataWithJSONObject:serializedEvents options:0 error:nil];
 
     NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-    NSString *paramString = [NSString stringWithFormat:@"log=%@", [MPAdditions_NSString mp_URLEncodedString:jsonString]];
+    NSString *paramString = [NSString stringWithFormat:@"log=%@", [jsonString mp_URLEncodedString]];
 
     return paramString;
 }

@@ -7,7 +7,6 @@
 
 #import "MPMoPubRewardedVideoCustomEvent.h"
 #import "MPMRAIDInterstitialViewController.h"
-#import "MPInterstitialViewController.h"
 #import "MPInstanceProvider.h"
 #import "MPLogging.h"
 #import "MPRewardedVideoReward.h"
@@ -100,6 +99,9 @@
 {
     self.adAvailable = NO;
     [self.delegate rewardedVideoDidDisappearForCustomEvent:self];
+
+    // Get rid of the interstitial view controller when done with it so we don't hold on longer than needed
+    self.interstitial = nil;
 }
 
 - (void)interstitialDidReceiveTapEvent:(MPInterstitialViewController *)interstitial
@@ -115,7 +117,7 @@
 - (void)interstitialRewardedVideoEnded
 {
     MPLogInfo(@"MoPub rewarded video finished playing.");
-    [self.delegate rewardedVideoShouldRewardUserForCustomEvent:self reward:[self configuration].rewardedVideoReward];
+    [self.delegate rewardedVideoShouldRewardUserForCustomEvent:self reward:[self configuration].selectedReward];
 }
 
 #pragma mark - MPPrivateRewardedVideoCustomEventDelegate

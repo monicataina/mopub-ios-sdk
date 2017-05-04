@@ -50,6 +50,7 @@ static NSString *const kMRAIDCommandResize = @"resize";
 @property (nonatomic, assign) CGSize currentAdSize;
 @property (nonatomic, assign) NSUInteger modalViewCount;
 @property (nonatomic, assign) MRAdViewState currentState;
+@property (nonatomic, assign) BOOL shouldUseUIWebView;
 // Track the original super view for when we move the ad view to the key window for a 1-part expand.
 @property (nonatomic, weak) UIView *originalSuperview;
 @property (nonatomic, assign) BOOL isViewable;
@@ -106,14 +107,8 @@ static NSString *const kMRAIDCommandResize = @"resize";
         _resizeBackgroundView = [[UIView alloc] initWithFrame:adViewFrame];
         _resizeBackgroundView.backgroundColor = [UIColor clearColor];
 
-        UIWebView *webView = [self buildMRAIDWebViewWithFrame:adViewFrame];
 
-        _mraidBridge = [[MPInstanceProvider sharedProvider] buildMRBridgeWithWebView:webView delegate:self];
         _destinationDisplayAgent = [[MPCoreInstanceProvider sharedProvider] buildMPAdDestinationDisplayAgentWithDelegate:self];
-        _mraidAdView = [[MPInstanceProvider sharedProvider] buildMRAIDMPClosableViewWithFrame:adViewFrame webView:webView delegate:self];
-        if (placementType == MRAdViewPlacementTypeInterstitial) {
-            _mraidAdView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-        }
 
         _adAlertManager = [[MPCoreInstanceProvider sharedProvider] buildMPAdAlertManagerWithDelegate:self];
         _adAlertManagerTwoPart = [[MPCoreInstanceProvider sharedProvider] buildMPAdAlertManagerWithDelegate:self];
@@ -139,6 +134,18 @@ static NSString *const kMRAIDCommandResize = @"resize";
     self.isAdLoading = YES;
     self.adRequiresPrecaching = configuration.precacheRequired;
     self.isAdVastVideoPlayer = configuration.isVastVideoPlayer;
+    self.shouldUseUIWebView = self.isAdVastVideoPlayer;
+
+    MPWebView *webView = [self buildMRAIDWebViewWithFrame:self.mraidDefaultAdFrame
+                                           forceUIWebView:self.shouldUseUIWebView];
+
+    self.mraidBridge = [[MPInstanceProvider sharedProvider] buildMRBridgeWithWebView:webView delegate:self];
+    self.mraidAdView = [[MPInstanceProvider sharedProvider] buildMRAIDMPClosableViewWithFrame:self.mraidDefaultAdFrame
+                                                                                      webView:webView
+                                                                                     delegate:self];
+    if (self.placementType == MRAdViewPlacementTypeInterstitial) {
+        self.mraidAdView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    }
 
     [self initAdAlertManager:self.adAlertManager forAdView:self.mraidAdView];
 
@@ -201,7 +208,7 @@ static NSString *const kMRAIDCommandResize = @"resize";
 
     NSDictionary *headers = [httpResponse allHeaderFields];
     NSString *contentType = [headers objectForKey:kMoPubHTTPHeaderContentType];
-    self.responseEncoding = [MPAdditions_NSHTTPURLResponse stringEncodingFromContentType:contentType];
+    self.responseEncoding = [httpResponse stringEncodingFromContentType:contentType];
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
@@ -267,22 +274,14 @@ static NSString *const kMRAIDCommandResize = @"resize";
     return bridge;
 }
 
-- (UIWebView *)buildMRAIDWebViewWithFrame:(CGRect)frame
+- (MPWebView *)buildMRAIDWebViewWithFrame:(CGRect)frame forceUIWebView:(BOOL)forceUIWebView
 {
-    UIWebView *webView = [[MPInstanceProvider sharedProvider] buildUIWebViewWithFrame:frame];
+    MPWebView *webView = [[MPWebView alloc] initWithFrame:frame forceUIWebView:forceUIWebView];
     webView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     webView.backgroundColor = [UIColor clearColor];
     webView.clipsToBounds = YES;
     webView.opaque = NO;
-    [MPAdditions_UIWebView mp_setScrollable:NO forWebView:webView];
-
-    if ([webView respondsToSelector:@selector(setAllowsInlineMediaPlayback:)]) {
-        [webView setAllowsInlineMediaPlayback:YES];
-    }
-
-    if ([webView respondsToSelector:@selector(setMediaPlaybackRequiresUserAction:)]) {
-        [webView setMediaPlaybackRequiresUserAction:NO];
-    }
+    [webView mp_setScrollable:NO];
 
     return webView;
 }
@@ -609,7 +608,7 @@ static NSString *const kMRAIDCommandResize = @"resize";
     [self adDidDismissModalView];
 }
 
-- (void)bridge:(MRBridge *)bridge didFinishLoadingWebView:(UIWebView *)webView
+- (void)bridge:(MRBridge *)bridge didFinishLoadingWebView:(MPWebView *)webView
 {
     // Loading an iframe can cause this method to execute and could potentially cause us to initialize the javascript for a two-part expand
     // and fire the ready event more than once. The isAdLoading flags helps us prevent that from happening.
@@ -641,7 +640,7 @@ static NSString *const kMRAIDCommandResize = @"resize";
     }
 }
 
-- (void)bridge:(MRBridge *)bridge didFailLoadingWebView:(UIWebView *)webView error:(NSError *)error
+- (void)bridge:(MRBridge *)bridge didFailLoadingWebView:(MPWebView *)webView error:(NSError *)error
 {
     self.isAdLoading = NO;
 
@@ -661,7 +660,7 @@ static NSString *const kMRAIDCommandResize = @"resize";
 - (void)bridge:(MRBridge *)bridge performActionForMoPubSpecificURL:(NSURL *)url
 {
     MPLogDebug(@"MRController - loading MoPub URL: %@", url);
-    MPMoPubHostCommand command = [MPAdditions_NSURL mp_mopubHostCommandForURL:url];
+    MPMoPubHostCommand command = [url mp_mopubHostCommand];
     if (command == MPMoPubHostCommandPrecacheComplete && self.adRequiresPrecaching) {
         [self adDidLoad];
     } else if (command == MPMoPubHostCommandFailLoad) {
@@ -717,7 +716,7 @@ static NSString *const kMRAIDCommandResize = @"resize";
 - (void)bridge:(MRBridge *)bridge handleNativeCommandSetOrientationPropertiesWithForceOrientationMask:(UIInterfaceOrientationMask)forceOrientationMask
 {
     // If the ad is trying to force an orientation that the app doesn't support, we shouldn't try to force the orientation.
-    if (![MPAdditions_UIApplication mp_supportsOrientationMask:forceOrientationMask]) {
+    if (![[UIApplication sharedApplication] mp_supportsOrientationMask:forceOrientationMask]) {
         return;
     }
 
@@ -742,7 +741,7 @@ static NSString *const kMRAIDCommandResize = @"resize";
     self.forceOrientationAfterAnimationBlock = nil;
     self.forceOrientationMask = forceOrientationMask;
 
-    BOOL inSameOrientation = [MPAdditions_UIApplication mp_doesOrientation:MPInterfaceOrientation() matchOrientationMask:forceOrientationMask];
+    BOOL inSameOrientation = [[UIApplication sharedApplication] mp_doesOrientation:MPInterfaceOrientation() matchOrientationMask:forceOrientationMask];
     UIViewController <MPForceableOrientationProtocol> *fullScreenAdViewController = inExpandedState ? self.expandModalViewController : self.interstitialViewController;
 
     // If we're currently in the force orientation, we don't need to do any rotation.  However, we still need to make sure
@@ -807,7 +806,7 @@ static NSString *const kMRAIDCommandResize = @"resize";
         // It doesn't matter what frame we use for the two-part expand. We'll overwrite it with a new frame when presenting the modal.
         CGRect twoPartFrame = self.mraidAdView.frame;
 
-        UIWebView *twoPartWebView = [self buildMRAIDWebViewWithFrame:twoPartFrame];
+        MPWebView *twoPartWebView = [self buildMRAIDWebViewWithFrame:twoPartFrame forceUIWebView:self.shouldUseUIWebView];
         self.mraidBridgeTwoPart = [[MPInstanceProvider sharedProvider] buildMRBridgeWithWebView:twoPartWebView delegate:self];
         self.mraidAdViewTwoPart = [[MPInstanceProvider sharedProvider] buildMRAIDMPClosableViewWithFrame:twoPartFrame webView:twoPartWebView delegate:self];
         self.isAdLoading = YES;

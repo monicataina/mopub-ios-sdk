@@ -13,7 +13,6 @@
 @interface MPLogProvider : NSObject
 
 + (MPLogProvider *)sharedLogProvider;
-- (void)setDebugMode:(BOOL)enableDebugging;
 - (void)addLogger:(id<MPLogger>)logger;
 - (void)removeLogger:(id<MPLogger>)logger;
 - (void)logMessage:(NSString *)message atLogLevel:(MPLogLevel)logLevel;

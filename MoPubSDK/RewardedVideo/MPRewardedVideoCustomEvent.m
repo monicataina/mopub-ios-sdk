@@ -49,10 +49,4 @@
     // and implement code to handle when the custom event is no longer needed by the rewarded video system.
 }
 
-+ (int)getCustomEventIdentifier
-{
-    // Subclasses may override this method to return their identifier so that delegates will know which subclass triggered an event
-    return -1;
-}
-
 @end

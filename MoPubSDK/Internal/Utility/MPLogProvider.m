@@ -10,10 +10,6 @@
 @interface MPLogProvider ()
 
 @property (nonatomic, strong) NSMutableArray *loggers;
-/*
- * A boolean that's used to enable/disable the verbose logging. default is YES (enabled)
- */
-@property (nonatomic) BOOL m_enableDebugging;
 
 @end
 
@@ -42,16 +38,9 @@
     self = [super init];
     if (self) {
         _loggers = [NSMutableArray array];
-        _m_enableDebugging = YES;
         [self addLogger:[[MPSystemLogger alloc] init]];
     }
     return self;
-}
-
-#pragma mark - Set logging mode
-- (void)setDebugMode:(BOOL)enableDebugging
-{
-    self.m_enableDebugging = enableDebugging;
 }
 
 #pragma mark - Loggers
@@ -70,14 +59,11 @@
 
 - (void)logMessage:(NSString *)message atLogLevel:(MPLogLevel)logLevel
 {
-    if(self.m_enableDebugging == YES)
-    {
-        [self.loggers enumerateObjectsUsingBlock:^(id<MPLogger> logger, NSUInteger idx, BOOL *stop) {
-            if ([logger logLevel] <= logLevel) {
-                [logger logMessage:message];
-            }
-        }];
-    }
+    [self.loggers enumerateObjectsUsingBlock:^(id<MPLogger> logger, NSUInteger idx, BOOL *stop) {
+        if ([logger logLevel] <= logLevel) {
+            [logger logMessage:message];
+        }
+    }];
 }
 
 @end
